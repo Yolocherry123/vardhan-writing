@@ -407,6 +407,125 @@ a.kicker:hover {
   text-align: center;
 }
 
+.desk h1,
+.desk .title-field {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.desk h1 {
+  margin: 0 0 0.7em;
+  font-size: 1em;
+  text-align: center;
+}
+
+.desk p,
+.desk-status {
+  text-align: center;
+}
+
+.desk-sign p {
+  max-width: 48ch;
+  margin: 0.8em auto;
+}
+
+.desk label {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25em;
+  width: 100%;
+  margin: 0.7em 0;
+  font-size: 0.85em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.desk-bar,
+.desk-fields,
+.desk-actions,
+.desk-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45em 0.9em;
+  margin: 0.4em 0 0.8em;
+}
+
+.desk-fields label {
+  width: auto;
+  flex: 1 1 9em;
+  margin: 0;
+}
+
+.desk button,
+.desk-toolbar button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  padding: 0.15em 0.05em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.desk button:hover,
+.desk-toolbar button:hover,
+.desk button:focus-visible,
+.desk-toolbar button:focus-visible {
+  border-bottom-color: var(--ink);
+}
+
+.desk button:disabled {
+  cursor: wait;
+}
+
+.desk input,
+.desk select,
+.desk textarea {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  width: 100%;
+  text-align: center;
+  padding: 0.35em 0;
+}
+
+.desk textarea {
+  min-height: 16em;
+  resize: vertical;
+  border: 1px solid var(--rule);
+  padding: 0.7em 0.6em;
+  line-height: 1.45;
+}
+
+.desk-list {
+  list-style: none;
+  margin: 1em 0 0;
+  padding: 0;
+}
+
+.desk-list button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0.75em 0;
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+
+.desk-list .title {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 @media (max-width: 560px) {
   .sheet { padding-top: 1.4rem; }
 
@@ -414,7 +533,7 @@ a.kicker:hover {
 }
 
 @media print {
-  .mast nav, .back, .continue, .colophon { display: none; }
+  .mast nav, .back, .continue, .colophon, .desk-toolbar, .desk-actions { display: none; }
   .sheet { width: auto; padding: 0; }
   a { text-decoration: none; }
 }

@@ -313,7 +313,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
     ["notes.html", "Notes"],
     ["quotes.html", "Quotes"],
     ["about.html", "About"],
-    ["admin/index.html", "Edit"],
+    ["edit.html", "Edit"],
   ].map(([href, label]) => `<a href="${prefix}${href}"${pathname === href ? ` aria-current="page"` : ""}>${label}</a>`).join("");
   const canonical = config.url && pathname
     ? `<link rel="canonical" href="${escapeHtml(`${config.url}/${pathname}`)}">`
@@ -328,7 +328,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=8">
+<link rel="stylesheet" href="${prefix}site.css?v=9">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -497,6 +497,8 @@ function favicon(config) {
 
 function copyStatic() {
   fs.copyFileSync(path.join(root, "src", "site.css"), path.join(docsDir, "site.css"));
+  fs.copyFileSync(path.join(root, "src", "edit.html"), path.join(docsDir, "edit.html"));
+  fs.copyFileSync(path.join(root, "src", "edit.js"), path.join(docsDir, "edit.js"));
   fs.cpSync(path.join(root, "src", "fonts"), path.join(docsDir, "fonts"), { recursive: true });
   fs.cpSync(path.join(root, "src", "admin"), path.join(docsDir, "admin"), { recursive: true });
   const images = path.join(writingDir, "images");
@@ -624,7 +626,7 @@ function main() {
   writeSite(config, posts);
   const index = fs.readFileSync(path.join(docsDir, "index.html"), "utf8");
   for (const post of posts) assert.match(index, new RegExp(escapeHtml(post.title)));
-  assert.match(index, /href="admin\/index.html"/);
+  assert.match(index, /href="edit.html"/);
   assert.match(index, /href="essays.html"/);
   assert.doesNotMatch(index, />Earlier</);
   assert.doesNotMatch(index, /Read the /);
@@ -637,7 +639,11 @@ function main() {
   assert.doesNotMatch(essays, />Note</);
   const built = fs.readFileSync(path.join(docsDir, "posts", `${posts[0].slug}.html`), "utf8");
   assert.doesNotMatch(built, /<script/i);
-  assert.match(built, /href="\.\.\/admin\/index.html"/);
+  assert.match(built, /href="\.\.\/edit.html"/);
+  const editor = fs.readFileSync(path.join(docsDir, "edit.js"), "utf8");
+  assert.match(editor, /api\.github\.com/);
+  assert.match(editor, /previousSha && current && current\.sha !== previousSha/);
+  assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /src="edit\.js"/);
   const desk = fs.readFileSync(path.join(docsDir, "admin", "config.yml"), "utf8");
   assert.match(desk, /name: github/);
   console.log(`built ${posts.length} ${posts.length === 1 ? "piece" : "pieces"}`);
