@@ -109,7 +109,7 @@ a:focus-visible {
   line-height: 1.45;
 }
 
-.wordmark { order: 1; letter-spacing: 0.18em; }
+.wordmark { order: 1; font-size: 1.15em; letter-spacing: 0.18em; }
 
 .tagline { order: 2; }
 
@@ -128,7 +128,7 @@ a:focus-visible {
 }
 
 .mast nav a {
-  font-size: 1em;
+  font-size: 0.82em;
   font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -146,13 +146,17 @@ a:focus-visible {
   text-align: center;
 }
 
-.featured { margin-top: 0.2em; text-align: center; }
+.featured {
+  margin-top: 0.4em;
+  padding-bottom: 0.3em;
+  text-align: center;
+}
 
 .kicker {
   margin: 0 0 0.12em;
-  font-size: 1em;
+  font-size: 0.78em;
   font-weight: 400;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   text-align: center;
 }
@@ -160,14 +164,16 @@ a:focus-visible {
 .featured h1,
 .post h1 {
   margin: 0;
-  font-size: 1em;
+  font-size: 1.7em;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1.45;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
   text-transform: uppercase;
   text-align: center;
   text-wrap: balance;
 }
+
+.post h1 { font-size: 1.45em; }
 
 a.kicker { text-decoration: none; }
 
@@ -194,8 +200,9 @@ a.kicker:hover {
 }
 
 .dateline {
-  margin: 0.15em 0 0;
-  font-size: 1em;
+  margin: 0.35em 0 0;
+  font-size: 0.85em;
+  letter-spacing: 0.02em;
   text-align: center;
 }
 
@@ -229,10 +236,11 @@ a.kicker:hover {
 
 .archive h1,
 .archive h2 {
-  margin: 0 0 1.2em;
-  font-size: 1em;
-  font-weight: 400;
-  letter-spacing: 0.16em;
+  margin: 0 0 0.8em;
+  font-size: 1.45em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
   text-transform: uppercase;
   text-align: center;
 }
@@ -247,25 +255,30 @@ a.kicker:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.12em;
-  padding: 0.75em 0;
+  gap: 0.05em;
+  padding: 0.45em 0;
+  font-size: 0.92em;
   text-align: center;
 }
 
-.archive time { font-variant-numeric: tabular-nums; }
+.archive time {
+  font-size: 0.82em;
+  font-variant-numeric: tabular-nums;
+}
 
 .archive a.title {
   margin: 0;
   font-size: 1em;
   font-weight: 700;
-  line-height: 1.45;
+  line-height: 1.35;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
 }
 
 .archive a.kicker {
   margin: 0;
-  letter-spacing: 0.12em;
+  font-size: 0.75em;
+  letter-spacing: 0.14em;
 }
 
 .back { margin: 0 0 2em; text-align: center; }
