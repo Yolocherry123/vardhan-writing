@@ -283,6 +283,7 @@ function loadPosts() {
       summary: data.summary || firstSentence(body),
       attribution: data.attribution || "",
       source: data.source || "",
+      align: pieceAlign(data.align),
       slug: identity.slug,
       html: renderMarkdown(body, 1),
     };
@@ -290,6 +291,10 @@ function loadPosts() {
   const orderKey = (post) => (post.instant || new Date(`${post.date}T00:00:00+05:30`)).toISOString();
   posts.sort((a, b) => orderKey(b).localeCompare(orderKey(a)) || b.slug.localeCompare(a.slug));
   return posts;
+}
+
+function pieceAlign(value) {
+  return value === "left" || value === "right" ? value : "center";
 }
 
 function firstSentence(body) {
@@ -323,7 +328,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=7">
+<link rel="stylesheet" href="${prefix}site.css?v=8">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -364,7 +369,7 @@ function renderHome(config, posts) {
 ${kindLink(latest.kind, 0)}
 <h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
 <p class="dateline"><time datetime="${latest.instant ? latest.instant.toISOString() : latest.date}">${formatDate(latest.when || latest.date)}</time></p>
-<p class="dek">${inline(latest.summary)}</p>
+<p class="dek align-${latest.align}">${inline(latest.summary)}</p>
 </article>`;
   const list = (items, className, label) =>
     items.length
@@ -421,10 +426,11 @@ ${matching.map((post) => pieceItem(post, 0, false)).join("\n")}
 }
 
 function renderPost(config, post) {
+  const align = pieceAlign(post.align);
   const credit = post.kind === "quote" && post.attribution
-    ? `<p class="attribution">${escapeHtml(post.attribution)}${post.source ? `, <cite>${escapeHtml(post.source)}</cite>` : ""}</p>`
+    ? `<p class="attribution align-${align}">${escapeHtml(post.attribution)}${post.source ? `, <cite>${escapeHtml(post.source)}</cite>` : ""}</p>`
     : "";
-  const proseClass = post.kind === "quote" ? "prose quote" : "prose";
+  const proseClass = `${post.kind === "quote" ? "prose quote" : "prose"} align-${align}`;
   return page({
     config,
     depth: 1,
@@ -574,7 +580,22 @@ function selfCheck() {
       html: "<p>Attention is the rarest and purest form of generosity.</p>",
     },
   );
-  assert.match(quotePage, /class="prose quote"/);
+  assert.match(quotePage, /class="prose quote align-center"/);
+  const leftPage = renderPost(
+    { title: "T", description: "d", author: "A", about: "b", url: "" },
+    {
+      title: "A note",
+      date: "2026-11-01",
+      kind: "note",
+      align: "left",
+      summary: "Left",
+      attribution: "",
+      source: "",
+      slug: "a-note",
+      html: "<p>Body.</p>",
+    },
+  );
+  assert.match(leftPage, /class="prose align-left"/);
   assert.match(quotePage, /Simone Weil, <cite>Gravity and Grace<\/cite>/);
   assert.equal(formatDate("2026-11-08"), "8 November 2026");
   assert.equal(formatDate("2026-11-07", "short"), "7 Nov 2026");

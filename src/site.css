@@ -169,7 +169,10 @@ a:focus-visible {
   text-wrap: balance;
 }
 
-a.kicker { text-decoration: none; }
+a.kicker {
+  display: block;
+  text-decoration: none;
+}
 
 a.kicker:hover {
   text-decoration: underline;
@@ -359,6 +362,30 @@ a.kicker:hover {
 .prose.quote p {
   text-indent: 0;
   margin: 0 0 0.6em;
+}
+
+.prose.align-left,
+.prose.align-left p,
+.prose.align-left h2,
+.prose.align-left h3,
+.prose.align-left ul,
+.prose.align-left ol,
+.prose.align-left blockquote,
+.dek.align-left,
+.attribution.align-left {
+  text-align: left;
+}
+
+.prose.align-right,
+.prose.align-right p,
+.prose.align-right h2,
+.prose.align-right h3,
+.prose.align-right ul,
+.prose.align-right ol,
+.prose.align-right blockquote,
+.dek.align-right,
+.attribution.align-right {
+  text-align: right;
 }
 
 .attribution {

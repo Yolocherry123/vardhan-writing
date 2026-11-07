@@ -49,6 +49,15 @@ collections:
         widget: string
         required: false
         hint: "For a quote, the book or essay, if you have it."
+      - label: Alignment
+        name: align
+        widget: select
+        default: center
+        options:
+          - { label: Center, value: center }
+          - { label: Left, value: left }
+          - { label: Right, value: right }
+        hint: "How the body text sits on the page."
       - label: Body
         name: body
         widget: markdown

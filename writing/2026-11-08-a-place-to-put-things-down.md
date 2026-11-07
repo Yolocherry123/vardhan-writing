@@ -2,6 +2,7 @@
 title: A place to put things down
 date: 2026-11-08T03:12:36+05:30
 kind: essay
+align: center
 summary: A plain page for notes, quotations, and longer pieces.
 attribution: ''
 source: ''
