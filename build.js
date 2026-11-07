@@ -9,6 +9,7 @@ const root = __dirname;
 const writingDir = path.join(root, "writing");
 const docsDir = path.join(root, "docs");
 const KINDS = { essay: "Essay", note: "Note", quote: "Quote" };
+const READ = { essay: "Read the essay", note: "Read the note", quote: "Read the quote" };
 
 function escapeHtml(value) {
   return String(value)
@@ -260,7 +261,6 @@ function firstSentence(body) {
 
 function page({ config, depth, pathname, title, description, bodyClass, main }) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
-  const onWriting = bodyClass === "home" || (pathname && pathname.startsWith("posts/"));
   const onAbout = pathname === "about.html";
   const fullTitle = title === config.title ? config.title : `${title} · ${config.title}`;
   const canonical = config.url && pathname
@@ -276,7 +276,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css">
+<link rel="stylesheet" href="${prefix}site.css?v=3">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -285,7 +285,7 @@ ${canonical}
 <header class="mast">
 <div class="mast-row">
 <a class="wordmark" href="${prefix}index.html">${escapeHtml(config.title)}</a>
-<nav aria-label="Site"><a href="${prefix}index.html"${onWriting ? ` aria-current="page"` : ""}>Writing</a><a href="${prefix}about.html"${onAbout ? ` aria-current="page"` : ""}>About</a><a href="${prefix}admin/index.html">Edit site</a></nav>
+<nav aria-label="Site"><a href="${prefix}about.html"${onAbout ? ` aria-current="page"` : ""}>About</a><a href="${prefix}admin/index.html">Edit</a></nav>
 </div>
 ${bodyClass === "home" ? `<p class="tagline">${escapeHtml(config.description)}</p>` : ""}
 </header>
@@ -311,21 +311,26 @@ function renderHome(config, posts) {
       main: `<p class="empty">Nothing posted yet.</p>`,
     });
   }
-  const items = posts.map((post) => `<li data-kind="${post.kind}">
-<p class="meta"><span class="kicker">${KINDS[post.kind]}</span><time datetime="${post.date}">${formatDate(post.date)}</time></p>
-<h3><a href="posts/${post.slug}.html">${escapeHtml(post.title)}</a></h3>
-<p class="dek">${inline(post.summary)}</p>
-</li>`).join("\n");
-  const filters = [
-    ["all", "All", true],
-    ["essay", "Essays", false],
-    ["note", "Notes", false],
-    ["quote", "Quotes", false],
-  ].map(([kind, label, checked]) => {
-    const count = kind === "all" ? posts.length : posts.filter((post) => post.kind === kind).length;
-    return `<input type="radio" name="kind" id="kind-${kind}"${checked ? " checked" : ""}><label for="kind-${kind}">${label} <span class="count">${count}</span></label>`;
-  }).join("");
-  const empty = ["essay", "note", "quote"].map((kind) => `<p class="none" data-for="${kind}">No ${kind}s yet.</p>`).join("\n");
+  const [latest, ...earlier] = posts;
+  const featured = `<article class="featured">
+<p class="kicker">${KINDS[latest.kind]}</p>
+<h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
+<p class="dateline"><time datetime="${latest.date}">${formatDate(latest.date)}</time></p>
+<p class="dek">${inline(latest.summary)}</p>
+<p class="continue"><a href="posts/${latest.slug}.html">${READ[latest.kind]}</a></p>
+</article>`;
+  const archive = earlier.length
+    ? `<section class="archive" aria-labelledby="earlier-heading">
+<h2 id="earlier-heading">Earlier</h2>
+<ol>
+${earlier.map((post) => `<li>
+<time datetime="${post.date}">${formatDate(post.date, "short")}</time>
+<a class="title" href="posts/${post.slug}.html">${escapeHtml(post.title)}</a>
+<span class="kicker">${KINDS[post.kind]}</span>
+</li>`).join("\n")}
+</ol>
+</section>`
+    : "";
   return page({
     config,
     depth: 0,
@@ -333,19 +338,7 @@ function renderHome(config, posts) {
     title: config.title,
     description: config.description,
     bodyClass: "home",
-    main: `<section class="index" aria-label="Writing">
-<div class="filters">
-<p class="filters-label" id="show-label">Show</p>
-<div role="radiogroup" aria-labelledby="show-label">
-${filters}
-</div>
-</div>
-<p class="order">Newest first</p>
-${empty}
-<ol>
-${items}
-</ol>
-</section>`,
+    main: featured + archive,
   });
 }
 
@@ -362,7 +355,7 @@ function renderPost(config, post) {
     description: post.summary,
     bodyClass: "page",
     main: `<article class="post">
-<p class="back"><a href="../index.html">Back to writing</a></p>
+<p class="back"><a href="../index.html">All writing</a></p>
 <p class="kicker">${KINDS[post.kind]}</p>
 <h1>${escapeHtml(post.title)}</h1>
 <p class="dateline"><time datetime="${post.date}">${formatDate(post.date)}</time></p>
@@ -529,14 +522,8 @@ function main() {
   const index = fs.readFileSync(path.join(docsDir, "index.html"), "utf8");
   for (const post of posts) assert.match(index, new RegExp(escapeHtml(post.title)));
   assert.match(index, /href="admin\/index.html"/);
-  assert.match(index, /Newest first/);
-  assert.match(index, /id="kind-quote"/);
-  for (let i = 1; i < posts.length; i += 1) {
-    assert.ok(posts[i - 1].date >= posts[i].date);
-    const newer = index.indexOf(escapeHtml(posts[i - 1].title));
-    const older = index.indexOf(escapeHtml(posts[i].title));
-    assert.ok(newer !== -1 && older !== -1 && newer < older);
-  }
+  assert.match(index, /Read the /);
+  assert.doesNotMatch(index, /id="kind-quote"/);
   const built = fs.readFileSync(path.join(docsDir, "posts", `${posts[0].slug}.html`), "utf8");
   assert.doesNotMatch(built, /<script/i);
   assert.match(built, /href="\.\.\/admin\/index.html"/);

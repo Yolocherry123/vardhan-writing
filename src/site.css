@@ -86,12 +86,18 @@ a:focus-visible {
   padding: 0.9in 0 1.1in;
 }
 
-.mast-row {
+.mast {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.9em;
   text-align: center;
+  padding-bottom: 1.1em;
+  margin-bottom: 2.4em;
+  border-bottom: 1px solid var(--rule);
+}
+
+.mast-row {
+  display: contents;
 }
 
 .wordmark {
@@ -103,191 +109,143 @@ a:focus-visible {
   line-height: 1.45;
 }
 
-.mast {
-  padding-bottom: 1.3em;
-  margin-bottom: 2.2em;
-  border-bottom: 1px solid var(--rule);
-  text-align: center;
-}
+.wordmark { order: 1; letter-spacing: 0.18em; }
 
-.mast nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.45em 1.5rem;
+.tagline { order: 2; }
+
+.mast nav { order: 3; margin-top: 0.85em; }
+
+.page .wordmark {
+  font-size: 1em;
+  font-style: normal;
 }
 
 .mast nav a {
   font-size: 1em;
   font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   text-decoration: none;
 }
 
+.mast nav a + a { margin-left: 1.25rem; }
+
 .mast nav a:hover,
-.mast nav a[aria-current="page"] {
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-}
+.mast nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: 0.18em; }
 
 .tagline {
-  margin: 0.75em 0 0;
+  margin: 0.85em 0 0;
   font-size: 1em;
   font-style: normal;
   line-height: 1.45;
   text-align: center;
 }
 
+.featured { margin-top: 2.6em; text-align: center; }
+
 .kicker {
-  margin: 0;
+  margin: 0 0 0.8em;
   font-size: 1em;
   font-weight: 400;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   text-align: center;
 }
 
+.featured h1,
 .post h1 {
-  margin: 0.45em 0 0;
-  font-size: 1.15em;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.35;
+  margin: 0;
+  font-size: 1em;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
+  text-transform: uppercase;
   text-align: center;
   text-wrap: balance;
 }
 
+.featured h1 a,
+.archive a.title,
 .wordmark,
 .back a,
-.colophon a,
-.index h3 a {
+.colophon a {
   text-decoration: none;
 }
 
+.featured h1 a:hover,
+.archive a.title:hover,
 .wordmark:hover,
 .back a:hover,
-.colophon a:hover,
-.index h3 a:hover {
+.colophon a:hover {
   text-decoration: underline;
   text-underline-offset: 0.16em;
 }
 
 .dateline {
-  margin: 0.55em 0 0;
+  margin: 0.8em 0 0;
   font-size: 1em;
-  text-align: center;
-}
-
-.filters {
-  text-align: center;
-}
-
-.filters-label {
-  margin: 0 0 0.7em;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.filters [role="radiogroup"] {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.55em 1.35rem;
-}
-
-.filters input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.filters label {
-  cursor: pointer;
-}
-
-.filters input:checked + label,
-.filters label:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-}
-
-.filters input:focus-visible + label {
-  outline: 1px solid var(--ink);
-  outline-offset: 3px;
-}
-
-.filters .count { letter-spacing: 0; }
-
-.order {
-  margin: 1.7em 0 0;
-  text-align: center;
-}
-
-.none {
-  display: none;
-  margin: 2em 0 0;
-  text-align: center;
-}
-
-.index:has(#kind-essay:checked) li:not([data-kind="essay"]) { display: none; }
-.index:has(#kind-note:checked) li:not([data-kind="note"]) { display: none; }
-.index:has(#kind-quote:checked) li:not([data-kind="quote"]) { display: none; }
-
-.index:has(#kind-essay:checked) .none[data-for="essay"],
-.index:has(#kind-note:checked) .none[data-for="note"],
-.index:has(#kind-quote:checked) .none[data-for="quote"] { display: block; }
-
-.index:has(#kind-essay:checked):has(li[data-kind="essay"]) .none[data-for="essay"],
-.index:has(#kind-note:checked):has(li[data-kind="note"]) .none[data-for="note"],
-.index:has(#kind-quote:checked):has(li[data-kind="quote"]) .none[data-for="quote"] { display: none; }
-
-.index ol {
-  list-style: none;
-  margin: 1.8em 0 0;
-  padding: 0;
-}
-
-.index li {
-  padding: 0;
-  text-align: center;
-}
-
-.index li + li { margin-top: 2.2em; }
-
-.index .meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35em 0.9em;
-  align-items: baseline;
-  margin: 0 0 0.45em;
-}
-
-.index h3 {
-  margin: 0;
-  font-size: 1.05em;
-  font-weight: 700;
-  line-height: 1.35;
-  text-align: center;
-}
-
-.index .dek {
-  margin: 0.55em 0 0;
-  text-indent: 0;
   text-align: center;
 }
 
 .dek {
-  margin: 0;
+  margin: 1.4em auto 0;
+  max-width: 48ch;
   font-size: 1em;
   line-height: 1.45;
   text-align: center;
+  text-indent: 0;
   text-wrap: pretty;
+}
+
+.continue {
+  margin: 1.6em 0 0;
+  text-align: center;
+}
+
+.continue a { text-underline-offset: 0.16em; }
+
+.archive { margin-top: 3.2em; text-align: center; }
+
+.archive h2 {
+  margin: 0 0 1em;
+  font-size: 1em;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.archive ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.archive li {
+  padding: 0.7em 0;
+  text-align: center;
+}
+
+.archive time,
+.archive a.title,
+.archive .kicker {
+  display: inline;
+}
+
+.archive time { font-variant-numeric: tabular-nums; }
+
+.archive a.title {
+  margin: 0 0.9em;
+  font-size: 1em;
+  line-height: 1.45;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.archive .kicker {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-align: center;
 }
 
 .back { margin: 0 0 2em; text-align: center; }
@@ -404,10 +362,12 @@ a:focus-visible {
 
 @media (max-width: 560px) {
   .sheet { padding-top: 1.4rem; }
+
+  .archive a.title { margin: 0 0.45em; }
 }
 
 @media print {
-  .mast nav, .back, .colophon, .filters { display: none; }
+  .mast nav, .back, .continue, .colophon { display: none; }
   .sheet { width: auto; padding: 0; }
   a { text-decoration: none; }
 }
