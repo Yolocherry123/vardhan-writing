@@ -230,9 +230,7 @@ function loadPosts() {
     if (!data.title) throw new Error(`${filename}: add a title`);
     if (!KINDS[data.kind]) throw new Error(`${filename}: kind must be essay, note, or quote`);
     if (!body) throw new Error(`${filename}: the piece is empty`);
-    if ((data.kind === "essay" || data.kind === "note") && !data.summary) {
-      throw new Error(`${filename}: add a summary`);
-    }
+    if (!data.summary) data.summary = firstSentence(body);
     if (data.kind === "quote" && !data.attribution) {
       throw new Error(`${filename}: a quote needs an attribution`);
     }
