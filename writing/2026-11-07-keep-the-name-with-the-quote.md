@@ -1,6 +1,6 @@
 ---
 title: Keep the name with the quote
-date: 2026-11-07
+date: 2026-11-07T03:01:17+05:30
 kind: note
 summary: A quotation without the person who wrote it is a line I will not be able to trust later.
 ---

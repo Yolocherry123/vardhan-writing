@@ -23,9 +23,8 @@ collections:
       - label: Date
         name: date
         widget: datetime
-        type: date
-        format: YYYY-MM-DD
-        picker_utc: true
+        time_format: true
+        input_timezone: Asia/Kolkata
         default: "{{now}}"
       - label: Kind
         name: kind

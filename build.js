@@ -178,37 +178,78 @@ function parseFrontMatter(raw, filename) {
   return { data, body: match[2].trim() };
 }
 
-function formatDate(iso, style) {
-  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!parts) throw new Error(`Date must be YYYY-MM-DD, got "${iso}"`);
-  const date = new Date(Date.UTC(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])));
-  if (date.getUTCFullYear() !== Number(parts[1]) || date.getUTCMonth() !== Number(parts[2]) - 1) {
-    throw new Error(`"${iso}" is not a real calendar date`);
+const ZONE = "Asia/Kolkata";
+
+function calendarDay(year, month, day) {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
+    throw new Error(`"${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}" is not a real calendar date`);
   }
-  return new Intl.DateTimeFormat("en-GB", {
+}
+
+function zoneDay(instant) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(instant);
+}
+
+function parseStamp(value, filename) {
+  const where = filename ? `${filename}: ` : "";
+  const raw = String(value ?? "").trim();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (dateOnly) {
+    calendarDay(Number(dateOnly[1]), Number(dateOnly[2]), Number(dateOnly[3]));
+    return { date: dateOnly[0], instant: null };
+  }
+  const match = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/.exec(raw);
+  if (!match) throw new Error(`${where}Date must be YYYY-MM-DD, got "${value}"`);
+  calendarDay(Number(match[1]), Number(match[2]), Number(match[3]));
+  let zone = match[7] || "+05:30";
+  if (/^[+-]\d{4}$/.test(zone)) zone = `${zone.slice(0, 3)}:${zone.slice(3)}`;
+  const iso = `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6] || "00"}${zone}`;
+  const instant = new Date(iso);
+  if (Number.isNaN(instant.getTime())) throw new Error(`${where}"${value}" is not a real date`);
+  return { date: zoneDay(instant), instant };
+}
+
+function formatDate(iso, style) {
+  const stamp = parseStamp(iso);
+  const instant = stamp.instant || new Date(`${stamp.date}T00:00:00+05:30`);
+  const day = new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
     month: style === "short" ? "short" : "long",
     year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
+    timeZone: ZONE,
+  }).format(instant);
+  if (!stamp.instant) return day;
+  const time = new Intl.DateTimeFormat("en-GB", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: ZONE,
+  }).format(instant).toLowerCase();
+  return `${day}, ${time}`;
 }
 
 function normalizeDate(value, filename) {
-  const where = filename ? `${filename}: ` : "";
-  const match = /^(\d{4}-\d{2}-\d{2})(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/.exec(String(value).trim());
-  if (!match) throw new Error(`${where}Date must be YYYY-MM-DD, got "${value}"`);
   try {
-    formatDate(match[1]);
+    return parseStamp(value, filename).date;
   } catch (error) {
-    throw new Error(`${where}${error.message}`);
+    if (filename && !error.message.startsWith(filename)) {
+      throw new Error(`${filename}: ${error.message}`);
+    }
+    throw error;
   }
-  return match[1];
 }
 
 function readPieceName(filename, headerDate) {
   const name = /^(\d{4}-\d{2}-\d{2})-([a-z0-9-]+)\.md$/.exec(filename);
   if (!name) throw new Error(`${filename}: rename it to YYYY-MM-DD-short-title.md, using lowercase words`);
-  return { date: normalizeDate(headerDate, filename), slug: name[2] };
+  const stamp = parseStamp(headerDate, filename);
+  return { date: stamp.date, instant: stamp.instant, slug: name[2] };
 }
 
 function loadConfig() {
@@ -236,6 +277,8 @@ function loadPosts() {
     return {
       title: data.title,
       date: identity.date,
+      when: String(data.date).trim(),
+      instant: identity.instant,
       kind: data.kind,
       summary: data.summary || firstSentence(body),
       attribution: data.attribution || "",
@@ -244,7 +287,8 @@ function loadPosts() {
       html: renderMarkdown(body, 1),
     };
   });
-  posts.sort((a, b) => b.date.localeCompare(a.date) || b.slug.localeCompare(a.slug));
+  const orderKey = (post) => (post.instant || new Date(`${post.date}T00:00:00+05:30`)).toISOString();
+  posts.sort((a, b) => orderKey(b).localeCompare(orderKey(a)) || b.slug.localeCompare(a.slug));
   return posts;
 }
 
@@ -313,7 +357,7 @@ function renderHome(config, posts) {
   const featured = `<article class="featured">
 ${kindLink(latest.kind, 0)}
 <h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
-<p class="dateline"><time datetime="${latest.date}">${formatDate(latest.date)}</time></p>
+<p class="dateline"><time datetime="${latest.instant ? latest.instant.toISOString() : latest.date}">${formatDate(latest.when || latest.date)}</time></p>
 <p class="dek">${inline(latest.summary)}</p>
 </article>`;
   const list = (items, className, label) =>
@@ -345,7 +389,7 @@ function pieceItem(post, depth, showKind) {
   return `<li>
 ${showKind ? kindLink(post.kind, depth) : ""}
 <a class="title" href="${prefix}posts/${post.slug}.html">${escapeHtml(post.title)}</a>
-<time datetime="${post.date}">${formatDate(post.date, "short")}</time>
+<time datetime="${post.instant ? post.instant.toISOString() : post.date}">${formatDate(post.when || post.date, "short")}</time>
 </li>`;
 }
 
@@ -386,7 +430,7 @@ function renderPost(config, post) {
 <p class="back"><a href="../index.html">All writing</a></p>
 ${kindLink(post.kind, 1)}
 <h1>${escapeHtml(post.title)}</h1>
-<p class="dateline"><time datetime="${post.date}">${formatDate(post.date)}</time></p>
+<p class="dateline"><time datetime="${post.instant ? post.instant.toISOString() : post.date}">${formatDate(post.when || post.date)}</time></p>
 <div class="${proseClass}">
 ${post.html}
 </div>
@@ -469,8 +513,7 @@ function writeSite(config, posts) {
 
 function writeFeed(config, posts) {
   const items = posts.map((post) => {
-    const [year, month, day] = post.date.split("-").map(Number);
-    const pubDate = new Date(Date.UTC(year, month - 1, day, 12)).toUTCString();
+    const pubDate = (post.instant || new Date(`${post.date}T12:00:00+05:30`)).toUTCString();
     const link = `${config.url}/posts/${post.slug}.html`;
     return `<item>
 <title>${escapeHtml(post.title)}</title>
@@ -529,6 +572,8 @@ function selfCheck() {
   assert.match(quotePage, /Simone Weil, <cite>Gravity and Grace<\/cite>/);
   assert.equal(formatDate("2026-11-08"), "8 November 2026");
   assert.equal(formatDate("2026-11-07", "short"), "7 Nov 2026");
+  assert.equal(formatDate("2026-11-08T03:45:06+05:30"), "8 November 2026, 3:45 am");
+  assert.equal(formatDate("2026-11-07T03:01:17+05:30", "short"), "7 Nov 2026, 3:01 am");
   assert.throws(() => formatDate("2026-02-31"));
   assert.equal(normalizeDate("2026-11-08"), "2026-11-08");
   assert.equal(normalizeDate("2026-11-08T00:00:00.000Z"), "2026-11-08");
