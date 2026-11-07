@@ -286,6 +286,7 @@ function loadPosts() {
     if (!data.title) throw new Error(`${filename}: add a title`);
     if (!KINDS[data.kind]) throw new Error(`${filename}: kind must be essay, note, or quote`);
     if (!body) throw new Error(`${filename}: the piece is empty`);
+    data.summary = (data.summary || firstSentence(body)).replace(/\{(?:left|center|right)\}/g, " ").replace(/\s+/g, " ").trim();
     if (!data.summary) data.summary = firstSentence(body);
     return {
       title: data.title,
@@ -311,7 +312,11 @@ function pieceAlign(value) {
 }
 
 function firstSentence(body) {
-  const plain = body.replace(/[#>*_`[\]]/g, "").replace(/\s+/g, " ").trim();
+  const plain = body
+    .replace(/\{(?:left|center|right)\}/g, " ")
+    .replace(/[#>*_`[\]]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (plain.length <= 180) return plain;
   const cut = plain.slice(0, 180);
   const space = cut.lastIndexOf(" ");
@@ -579,6 +584,7 @@ function selfCheck() {
     renderMarkdown("Before.\n\n{left}\nLeft side.\n\nAfter."),
     /<p>Before\.<\/p>\n<div class="placed align-left"><p>Left side\.<\/p><\/div>\n<p>After\.<\/p>/,
   );
+  assert.equal(firstSentence("hi\n\n{left}\nlsdkfpewaoph\n\nefoeshafoh"), "hi lsdkfpewaoph efoeshafoh");
   assert.match(renderMarkdown("### Smaller"), /<h3>Smaller<\/h3>/);
   assert.match(renderMarkdown("#### Least"), /<h4>Least<\/h4>/);
   assert.match(renderMarkdown("1. one\n2. two"), /<ol><li>one<\/li><li>two<\/li><\/ol>/);
