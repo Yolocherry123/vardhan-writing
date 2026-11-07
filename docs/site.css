@@ -377,6 +377,42 @@ a.kicker:hover {
   margin: 0 0 0.6em;
 }
 
+.prose .placed.align-left,
+.prose .placed.align-left p,
+.prose .placed.align-left h2,
+.prose .placed.align-left h3,
+.prose .placed.align-left h4,
+.prose .placed.align-left ul,
+.prose .placed.align-left ol,
+.prose .placed.align-left li,
+.prose .placed.align-left blockquote {
+  text-align: left;
+}
+
+.prose .placed.align-center,
+.prose .placed.align-center p,
+.prose .placed.align-center h2,
+.prose .placed.align-center h3,
+.prose .placed.align-center h4,
+.prose .placed.align-center ul,
+.prose .placed.align-center ol,
+.prose .placed.align-center li,
+.prose .placed.align-center blockquote {
+  text-align: center;
+}
+
+.prose .placed.align-right,
+.prose .placed.align-right p,
+.prose .placed.align-right h2,
+.prose .placed.align-right h3,
+.prose .placed.align-right h4,
+.prose .placed.align-right ul,
+.prose .placed.align-right ol,
+.prose .placed.align-right li,
+.prose .placed.align-right blockquote {
+  text-align: right;
+}
+
 .prose.align-left,
 .prose.align-left p,
 .prose.align-left h2,
@@ -471,7 +507,12 @@ a.kicker:hover {
   margin: 0.4em 0 0.8em;
 }
 
-.desk-tool-group { width: 100%; margin: 0; }
+.desk-tool-group {
+  width: 100%;
+  margin: 0.45em 0;
+  padding: 0.6em 0.7em;
+  border: 1px solid var(--ink);
+}
 
 .desk-tool-group span {
   font-size: 0.85em;
@@ -490,9 +531,8 @@ a.kicker:hover {
   font: inherit;
   color: inherit;
   background: transparent;
-  border: 0;
-  border-bottom: 1px solid transparent;
-  padding: 0.15em 0.05em;
+  border: 1px solid var(--ink);
+  padding: 0.4em 0.55em;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
@@ -502,7 +542,7 @@ a.kicker:hover {
 .desk-toolbar button:hover,
 .desk button:focus-visible,
 .desk-toolbar button:focus-visible {
-  border-bottom-color: var(--ink);
+  background: #f2f2f2;
 }
 
 .desk button:disabled {
@@ -536,12 +576,18 @@ a.kicker:hover {
   padding: 0;
 }
 
+.desk-list li {
+  margin: 0.75em 0;
+  border: 1px solid var(--ink);
+}
+
 .desk-list button {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  padding: 0.75em 0;
+  padding: 0.75em 0.4em;
+  border: 0;
   text-transform: none;
   letter-spacing: 0.04em;
 }

@@ -362,6 +362,11 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
 <button type="button" data-tool="code">Code</button>
 <button type="button" data-tool="link">Link</button>
 </div>
+<div class="desk-tool-group"><span>Align</span>
+<button type="button" data-tool="align-left">Left</button>
+<button type="button" data-tool="align-center">Center</button>
+<button type="button" data-tool="align-right">Right</button>
+</div>
 <div class="desk-tool-group"><span>Blocks</span>
 <button type="button" data-tool="text">Text</button>
 <button type="button" data-tool="heading">Heading</button>
@@ -452,7 +457,7 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
   }
 
   function stripBlock(line) {
-    return line.replace(/^\s*(?:#{1,4}\s+|>\s*|[-*]\s+|\d+\.\s+)/, "");
+    return line.replace(/^\s*(?:\{(?:left|center|right)\}\s*|#{1,4}\s+|>\s*|[-*]\s+|\d+\.\s+)/, "");
   }
 
   function setBlock(kind) {
@@ -497,6 +502,85 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
     el.focus();
   }
 
+  function isMarkerLine(line) {
+    return /^\{(left|center|right)\}$/.test(line.trim());
+  }
+
+  function lineAt(value, index) {
+    const start = value.lastIndexOf("\n", Math.max(0, index) - 1) + 1;
+    const breakAt = value.indexOf("\n", start);
+    const end = breakAt === -1 ? value.length : breakAt;
+    return { start, end, text: value.slice(start, end) };
+  }
+
+  function blockAtCursor() {
+    const el = bodyField();
+    const value = el.value;
+    let probe = el.selectionStart;
+    if (probe > 0 && value[probe - 1] === "\n" && (probe === value.length || value[probe] === "\n")) probe -= 1;
+    let line = lineAt(value, probe);
+    if (!line.text.trim() && line.start > 0) {
+      const previous = lineAt(value, line.start - 1);
+      if (previous.text.trim()) line = previous;
+    }
+    if (isMarkerLine(line.text)) {
+      let nextIndex = line.end + 1;
+      while (nextIndex <= value.length) {
+        const next = lineAt(value, Math.min(nextIndex, value.length));
+        if (next.text.trim()) {
+          line = next;
+          break;
+        }
+        if (next.end >= value.length) break;
+        nextIndex = next.end + 1;
+      }
+    }
+    let start = line.start;
+    let end = line.end;
+    const fencesBefore = value.slice(0, line.start).split("\n").filter((item) => item.startsWith("```")).length;
+    if (line.text.startsWith("```") || fencesBefore % 2 === 1) {
+      let open = line;
+      while (open.start > 0 && !open.text.startsWith("```")) open = lineAt(value, open.start - 1);
+      if (open.text.startsWith("```")) {
+        start = open.start;
+        end = open.end;
+        while (end < value.length) {
+          const next = lineAt(value, end + 1);
+          end = next.end;
+          if (next.text.startsWith("```")) break;
+        }
+      }
+    } else if (/^\s*[-*]\s+/.test(line.text)) {
+      const isItem = (item) => /^\s*[-*]\s+/.test(item);
+      while (start > 0 && isItem(lineAt(value, start - 1).text)) start = lineAt(value, start - 1).start;
+      while (end < value.length && isItem(lineAt(value, end + 1).text)) end = lineAt(value, end + 1).end;
+    } else if (/^\s*\d+\.\s+/.test(line.text)) {
+      const isItem = (item) => /^\s*\d+\.\s+/.test(item);
+      while (start > 0 && isItem(lineAt(value, start - 1).text)) start = lineAt(value, start - 1).start;
+      while (end < value.length && isItem(lineAt(value, end + 1).text)) end = lineAt(value, end + 1).end;
+    } else if (line.text.startsWith(">")) {
+      const isQuote = (item) => item.startsWith(">");
+      while (start > 0 && isQuote(lineAt(value, start - 1).text)) start = lineAt(value, start - 1).start;
+      while (end < value.length && isQuote(lineAt(value, end + 1).text)) end = lineAt(value, end + 1).end;
+    } else if (!/^#{1,4}\s+/.test(line.text) && !/^(-{3,}|\*{3,})$/.test(line.text.trim())) {
+      const isParagraph = (item) => item.trim() && !item.startsWith("```") && !item.startsWith(">") && !/^#{1,4}\s+/.test(item) && !/^\s*[-*]\s+/.test(item) && !/^\s*\d+\.\s+/.test(item) && !/^(-{3,}|\*{3,})$/.test(item.trim()) && !isMarkerLine(item);
+      while (start > 0 && isParagraph(lineAt(value, start - 1).text)) start = lineAt(value, start - 1).start;
+      while (end < value.length && isParagraph(lineAt(value, end + 1).text)) end = lineAt(value, end + 1).end;
+    }
+    if (start > 0 && isMarkerLine(lineAt(value, start - 1).text)) start = lineAt(value, start - 1).start;
+    return { el, start, end };
+  }
+
+  function setAlign(direction) {
+    const { el, start, end } = blockAtCursor();
+    const lines = el.value.slice(start, end).split("\n");
+    const content = (isMarkerLine(lines[0] || "") ? lines.slice(1) : lines).join("\n").replace(/^\n/, "");
+    const fallback = document.getElementById("align").value;
+    const next = direction === fallback ? content : (content.trim() ? `{${direction}}\n${content}` : `{${direction}}`);
+    el.setRangeText(next, start, end, "end");
+    el.focus();
+  }
+
   function applyTool(tool) {
     if (tool === "bold") wrapSelection("**", "**");
     else if (tool === "italic") wrapSelection("*", "*");
@@ -508,7 +592,8 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
         return;
       }
       wrapSelection("[", `](${href.trim()})`);
-    } else setBlock(tool);
+    } else if (tool.startsWith("align-")) setAlign(tool.slice("align-".length));
+    else setBlock(tool);
   }
 
   async function uploadPicture(file) {

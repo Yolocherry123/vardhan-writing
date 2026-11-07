@@ -76,17 +76,29 @@ function isBlockStart(line) {
     /^#{1,4}\s+/.test(line) ||
     /^\s*[-*]\s+/.test(line) ||
     /^\s*\d+\.\s+/.test(line) ||
-    /^(-{3,}|\*{3,})$/.test(line.trim())
+    /^(-{3,}|\*{3,})$/.test(line.trim()) ||
+    /^\{(left|center|right)\}$/.test(line.trim())
   );
 }
 
 function renderMarkdown(markdown, depth = 0) {
   const lines = markdown.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
   const blocks = [];
+  let placed = "";
+  const emit = (html) => {
+    blocks.push(placed ? `<div class="placed align-${placed}">${html}</div>` : html);
+    placed = "";
+  };
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
     if (line.trim() === "") {
+      i += 1;
+      continue;
+    }
+    const alignMarker = /^\{(left|center|right)\}$/.exec(line.trim());
+    if (alignMarker) {
+      placed = alignMarker[1];
       i += 1;
       continue;
     }
@@ -98,11 +110,11 @@ function renderMarkdown(markdown, depth = 0) {
         i += 1;
       }
       if (i < lines.length) i += 1;
-      blocks.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+      emit(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
       continue;
     }
     if (/^(-{3,}|\*{3,})$/.test(line.trim())) {
-      blocks.push("<hr>");
+      emit("<hr>");
       i += 1;
       continue;
     }
@@ -110,7 +122,7 @@ function renderMarkdown(markdown, depth = 0) {
     if (heading) {
       const marks = heading[1].length;
       const level = marks <= 2 ? 2 : marks;
-      blocks.push(`<h${level}>${inline(heading[2].trim(), depth)}</h${level}>`);
+      emit(`<h${level}>${inline(heading[2].trim(), depth)}</h${level}>`);
       i += 1;
       continue;
     }
@@ -130,7 +142,7 @@ function renderMarkdown(markdown, depth = 0) {
         break;
       }
       const paragraphs = quoted.join("\n").split(/\n\s*\n/).map((part) => part.replace(/\n/g, " ").trim()).filter(Boolean);
-      blocks.push(`<blockquote>${paragraphs.map((part) => `<p>${inline(part, depth)}</p>`).join("")}</blockquote>`);
+      emit(`<blockquote>${paragraphs.map((part) => `<p>${inline(part, depth)}</p>`).join("")}</blockquote>`);
       continue;
     }
     if (/^\s*[-*]\s+/.test(line)) {
@@ -139,7 +151,7 @@ function renderMarkdown(markdown, depth = 0) {
         items.push(lines[i].replace(/^\s*[-*]\s+/, ""));
         i += 1;
       }
-      blocks.push(`<ul>${items.map((item) => `<li>${inline(item.trim(), depth)}</li>`).join("")}</ul>`);
+      emit(`<ul>${items.map((item) => `<li>${inline(item.trim(), depth)}</li>`).join("")}</ul>`);
       continue;
     }
     if (/^\s*\d+\.\s+/.test(line)) {
@@ -148,7 +160,7 @@ function renderMarkdown(markdown, depth = 0) {
         items.push(lines[i].replace(/^\s*\d+\.\s+/, ""));
         i += 1;
       }
-      blocks.push(`<ol>${items.map((item) => `<li>${inline(item.trim(), depth)}</li>`).join("")}</ol>`);
+      emit(`<ol>${items.map((item) => `<li>${inline(item.trim(), depth)}</li>`).join("")}</ol>`);
       continue;
     }
     const paragraph = [];
@@ -156,7 +168,7 @@ function renderMarkdown(markdown, depth = 0) {
       paragraph.push(lines[i].trim());
       i += 1;
     }
-    blocks.push(`<p>${inline(paragraph.join(" "), depth)}</p>`);
+    emit(`<p>${inline(paragraph.join(" "), depth)}</p>`);
   }
   return blocks.join("\n");
 }
@@ -329,7 +341,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=10">
+<link rel="stylesheet" href="${prefix}site.css?v=11">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -563,6 +575,10 @@ function selfCheck() {
   assert.match(renderMarkdown("Use `<script>` carefully."), /&lt;script&gt;/);
   assert.doesNotMatch(renderMarkdown("Use `<script>` carefully."), /<script>/);
   assert.match(renderMarkdown("## Section\n\nHello."), /<h2>Section<\/h2>/);
+  assert.match(
+    renderMarkdown("Before.\n\n{left}\nLeft side.\n\nAfter."),
+    /<p>Before\.<\/p>\n<div class="placed align-left"><p>Left side\.<\/p><\/div>\n<p>After\.<\/p>/,
+  );
   assert.match(renderMarkdown("### Smaller"), /<h3>Smaller<\/h3>/);
   assert.match(renderMarkdown("#### Least"), /<h4>Least<\/h4>/);
   assert.match(renderMarkdown("1. one\n2. two"), /<ol><li>one<\/li><li>two<\/li><\/ol>/);
