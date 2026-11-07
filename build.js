@@ -346,7 +346,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=12">
+<link rel="stylesheet" href="${prefix}site.css?v=13">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -384,7 +384,7 @@ function renderHome(config, posts) {
   const previous = posts.filter((post) => post.date !== posts[0].date);
   const [latest, ...sameDay] = today;
   const lead = latest.kind === "note"
-    ? `<p class="dek align-${latest.align}">${inline(latest.summary)}</p>`
+    ? `<p class="dek">${inline(latest.summary)}</p>`
     : homePreview(latest);
   const featured = `<article class="featured">
 ${kindLink(latest.kind, 0)}
@@ -418,17 +418,16 @@ function kindLink(kind, depth) {
 
 function quoteCredit(post) {
   if (post.kind !== "quote" || !post.attribution) return "";
-  const align = pieceAlign(post.align);
-  return `<p class="attribution align-${align}">${escapeHtml(post.attribution)}${post.source ? `, <cite>${escapeHtml(post.source)}</cite>` : ""}</p>`;
+  const source = post.source ? `, <cite>${escapeHtml(post.source)}</cite>` : "";
+  return `<p class="attribution">— ${escapeHtml(post.attribution)}${source}</p>`;
 }
 
 function homePreview(post) {
-  const align = pieceAlign(post.align);
   if (post.kind === "quote") {
-    return `<div class="home-quote prose quote align-${align}">${post.html}</div>${quoteCredit(post)}`;
+    return `<div class="home-quote prose quote">${post.html}</div>${quoteCredit(post)}`;
   }
   if (post.kind === "essay" && post.summary) {
-    return `<p class="dek align-${align}">${inline(post.summary)}</p>`;
+    return `<p class="dek">${inline(post.summary)}</p>`;
   }
   return "";
 }
@@ -465,7 +464,7 @@ ${matching.map((post) => pieceItem(post, 0, false)).join("\n")}
 }
 
 function renderPost(config, post) {
-  const align = pieceAlign(post.align);
+  const align = post.kind === "quote" ? "center" : pieceAlign(post.align);
   const credit = quoteCredit(post);
   const proseClass = `${post.kind === "quote" ? "prose quote" : "prose"} align-${align}`;
   return page({
@@ -644,7 +643,7 @@ function selfCheck() {
     },
   );
   assert.match(leftPage, /class="prose align-left"/);
-  assert.match(quotePage, /Simone Weil, <cite>Gravity and Grace<\/cite>/);
+  assert.match(quotePage, /— Simone Weil, <cite>Gravity and Grace<\/cite>/);
   const sampleConfig = { title: "T", description: "d", author: "A", about: "b", url: "" };
   const sampleEssay = {
     title: "An essay",
@@ -676,9 +675,10 @@ function selfCheck() {
   assert.match(home, /The short account\./);
   assert.doesNotMatch(home, /much longer essay body/);
   assert.match(home, /The sdkjf lsdkjflajkh/);
-  assert.match(home, /ikk, <cite>dd<\/cite>/);
+  assert.match(home, /— ikk, <cite>dd<\/cite>/);
+  assert.match(home, /<p class="dek">The short account\.<\/p>/);
   const quoteHome = renderHome(sampleConfig, [sampleQuote, sampleEssay]);
-  assert.match(quoteHome, /<div class="home-quote prose quote align-center"><p>The sdkjf lsdkjflajkh<\/p><\/div>/);
+  assert.match(quoteHome, /<div class="home-quote prose quote"><p>The sdkjf lsdkjflajkh<\/p><\/div>/);
   assert.match(quoteHome, /The short account\./);
   assert.equal(formatDate("2026-11-08"), "8 November 2026");
   assert.equal(formatDate("2026-11-07", "short"), "7 Nov 2026");
