@@ -311,11 +311,21 @@ function renderHome(config, posts) {
       main: `<p class="empty">Nothing posted yet.</p>`,
     });
   }
-  const items = posts.map((post) => `<li>
+  const items = posts.map((post) => `<li data-kind="${post.kind}">
 <p class="meta"><span class="kicker">${KINDS[post.kind]}</span><time datetime="${post.date}">${formatDate(post.date)}</time></p>
 <h3><a href="posts/${post.slug}.html">${escapeHtml(post.title)}</a></h3>
 <p class="dek">${inline(post.summary)}</p>
 </li>`).join("\n");
+  const filters = [
+    ["all", "All", true],
+    ["essay", "Essays", false],
+    ["note", "Notes", false],
+    ["quote", "Quotes", false],
+  ].map(([kind, label, checked]) => {
+    const count = kind === "all" ? posts.length : posts.filter((post) => post.kind === kind).length;
+    return `<input type="radio" name="kind" id="kind-${kind}"${checked ? " checked" : ""}><label for="kind-${kind}">${label} <span class="count">${count}</span></label>`;
+  }).join("");
+  const empty = ["essay", "note", "quote"].map((kind) => `<p class="none" data-for="${kind}">No ${kind}s yet.</p>`).join("\n");
   return page({
     config,
     depth: 0,
@@ -324,6 +334,14 @@ function renderHome(config, posts) {
     description: config.description,
     bodyClass: "home",
     main: `<section class="index" aria-label="Writing">
+<div class="filters">
+<p class="filters-label" id="show-label">Show</p>
+<div role="radiogroup" aria-labelledby="show-label">
+${filters}
+</div>
+</div>
+<p class="order">Newest first</p>
+${empty}
 <ol>
 ${items}
 </ol>
@@ -511,6 +529,14 @@ function main() {
   const index = fs.readFileSync(path.join(docsDir, "index.html"), "utf8");
   for (const post of posts) assert.match(index, new RegExp(escapeHtml(post.title)));
   assert.match(index, /href="admin\/index.html"/);
+  assert.match(index, /Newest first/);
+  assert.match(index, /id="kind-quote"/);
+  for (let i = 1; i < posts.length; i += 1) {
+    assert.ok(posts[i - 1].date >= posts[i].date);
+    const newer = index.indexOf(escapeHtml(posts[i - 1].title));
+    const older = index.indexOf(escapeHtml(posts[i].title));
+    assert.ok(newer !== -1 && older !== -1 && newer < older);
+  }
   const built = fs.readFileSync(path.join(docsDir, "posts", `${posts[0].slug}.html`), "utf8");
   assert.doesNotMatch(built, /<script/i);
   assert.match(built, /href="\.\.\/admin\/index.html"/);

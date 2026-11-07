@@ -88,9 +88,10 @@ a:focus-visible {
 
 .mast-row {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9em;
+  text-align: center;
 }
 
 .wordmark {
@@ -103,16 +104,17 @@ a:focus-visible {
 }
 
 .mast {
-  padding-bottom: 0.9em;
-  margin-bottom: 1.8em;
+  padding-bottom: 1.3em;
+  margin-bottom: 2.2em;
   border-bottom: 1px solid var(--rule);
+  text-align: center;
 }
 
 .mast nav {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.35em 1.15rem;
+  justify-content: center;
+  gap: 0.45em 1.5rem;
 }
 
 .mast nav a {
@@ -128,11 +130,11 @@ a:focus-visible {
 }
 
 .tagline {
-  margin: 0.45em 0 0;
+  margin: 0.75em 0 0;
   font-size: 1em;
   font-style: normal;
   line-height: 1.45;
-  text-align: left;
+  text-align: center;
 }
 
 .kicker {
@@ -141,16 +143,16 @@ a:focus-visible {
   font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  text-align: left;
+  text-align: center;
 }
 
 .post h1 {
-  margin: 0.35em 0 0;
+  margin: 0.45em 0 0;
   font-size: 1.15em;
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.35;
-  text-align: left;
+  text-align: center;
   text-wrap: balance;
 }
 
@@ -170,32 +172,100 @@ a:focus-visible {
 }
 
 .dateline {
-  margin: 0.45em 0 0;
+  margin: 0.55em 0 0;
   font-size: 1em;
-  text-align: left;
+  text-align: center;
 }
+
+.filters {
+  text-align: center;
+}
+
+.filters-label {
+  margin: 0 0 0.7em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.filters [role="radiogroup"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55em 1.35rem;
+}
+
+.filters input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.filters label {
+  cursor: pointer;
+}
+
+.filters input:checked + label,
+.filters label:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.filters input:focus-visible + label {
+  outline: 1px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.filters .count { letter-spacing: 0; }
+
+.order {
+  margin: 1.7em 0 0;
+  text-align: center;
+}
+
+.none {
+  display: none;
+  margin: 2em 0 0;
+  text-align: center;
+}
+
+.index:has(#kind-essay:checked) li:not([data-kind="essay"]) { display: none; }
+.index:has(#kind-note:checked) li:not([data-kind="note"]) { display: none; }
+.index:has(#kind-quote:checked) li:not([data-kind="quote"]) { display: none; }
+
+.index:has(#kind-essay:checked) .none[data-for="essay"],
+.index:has(#kind-note:checked) .none[data-for="note"],
+.index:has(#kind-quote:checked) .none[data-for="quote"] { display: block; }
+
+.index:has(#kind-essay:checked):has(li[data-kind="essay"]) .none[data-for="essay"],
+.index:has(#kind-note:checked):has(li[data-kind="note"]) .none[data-for="note"],
+.index:has(#kind-quote:checked):has(li[data-kind="quote"]) .none[data-for="quote"] { display: none; }
 
 .index ol {
   list-style: none;
-  margin: 0;
+  margin: 1.8em 0 0;
   padding: 0;
 }
 
 .index li {
-  padding: 1.15em 0;
-  border-top: 1px solid var(--rule);
+  padding: 0;
+  text-align: center;
 }
 
-.index li:first-child {
-  border-top: 0;
-}
+.index li + li { margin-top: 2.2em; }
 
 .index .meta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.35em 0.9em;
   align-items: baseline;
-  margin: 0 0 0.3em;
+  margin: 0 0 0.45em;
 }
 
 .index h3 {
@@ -203,23 +273,24 @@ a:focus-visible {
   font-size: 1.05em;
   font-weight: 700;
   line-height: 1.35;
-  text-align: left;
+  text-align: center;
 }
 
 .index .dek {
-  margin: 0.4em 0 0;
+  margin: 0.55em 0 0;
   text-indent: 0;
+  text-align: center;
 }
 
 .dek {
   margin: 0;
   font-size: 1em;
   line-height: 1.45;
-  text-align: left;
+  text-align: center;
   text-wrap: pretty;
 }
 
-.back { margin: 0 0 2em; }
+.back { margin: 0 0 2em; text-align: center; }
 
 .back a {
   font-size: 1em;
@@ -232,11 +303,13 @@ a:focus-visible {
 .prose {
   font-size: 1em;
   line-height: 1.45;
+  text-align: center;
 }
 
 .prose p {
-  margin: 0;
-  text-indent: 0.5in;
+  margin: 0 0 0.9em;
+  text-indent: 0;
+  text-align: center;
   text-wrap: pretty;
 }
 
@@ -268,11 +341,12 @@ a:focus-visible {
 
 .prose ul,
 .prose ol {
-  margin: 1em 0;
-  padding-left: 0.5in;
+  margin: 1em auto;
+  padding-left: 0;
+  text-align: center;
 }
 
-.prose ul { list-style: none; padding-left: 0.5in; }
+.prose ul { list-style: none; }
 
 .prose ul li::before { content: "– "; }
 
@@ -330,14 +404,10 @@ a:focus-visible {
 
 @media (max-width: 560px) {
   .sheet { padding-top: 1.4rem; }
-
-  .mast-row { flex-wrap: wrap; }
-
-  .prose p { text-indent: 1.5em; }
 }
 
 @media print {
-  .mast nav, .back, .colophon { display: none; }
+  .mast nav, .back, .colophon, .filters { display: none; }
   .sheet { width: auto; padding: 0; }
   a { text-decoration: none; }
 }
