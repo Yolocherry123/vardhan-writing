@@ -2,6 +2,7 @@ backend:
   name: github
   repo: Yolocherry123/vardhan-writing
   branch: main
+  auth_methods: [token]
 
 media_folder: writing/images
 public_folder: /images

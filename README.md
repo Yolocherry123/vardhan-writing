@@ -19,7 +19,7 @@ Then open http://127.0.0.1:8765/
 
 The desk is a private page on the site. From there you can add a quote, a note, or an essay, upload a picture or a file, and change the site name, the tagline, and the About page. Saving publishes the change.
 
-GitHub cannot show a “Log in with GitHub” button on a static site. The first time you open the desk, choose sign in with a token. The screen links to the GitHub page that creates one. Make it a fine-grained token for this repository only, with Contents set to read and write. It stays in that browser. Do not put it in this folder, and sign out on a computer you share.
+GitHub cannot show a “Log in with GitHub” button on a static site, so the desk asks for a token instead. The screen links to the GitHub page that creates one. Make it a fine-grained token for this repository only, with Contents set to read and write. It stays in that browser. Do not put it in this folder, and sign out on a computer you share.
 
 Do this once:
 
