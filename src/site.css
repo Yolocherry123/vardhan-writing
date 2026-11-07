@@ -211,7 +211,16 @@ a.kicker:hover {
 
 .continue a { text-underline-offset: 0.16em; }
 
-.archive { margin-top: 3.2em; text-align: center; }
+.archive {
+  margin-top: 2.4em;
+  text-align: center;
+}
+
+.archive.previous {
+  margin-top: 1.2em;
+  padding-top: 1.6em;
+  border-top: 1px solid var(--rule);
+}
 
 .archive h1,
 .archive h2 {

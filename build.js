@@ -273,7 +273,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=4">
+<link rel="stylesheet" href="${prefix}site.css?v=5">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -307,20 +307,23 @@ function renderHome(config, posts) {
       main: `<p class="empty">Nothing posted yet.</p>`,
     });
   }
-  const [latest, ...earlier] = posts;
+  const today = posts.filter((post) => post.date === posts[0].date);
+  const previous = posts.filter((post) => post.date !== posts[0].date);
+  const [latest, ...sameDay] = today;
   const featured = `<article class="featured">
 ${kindLink(latest.kind, 0)}
 <h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
 <p class="dateline"><time datetime="${latest.date}">${formatDate(latest.date)}</time></p>
 <p class="dek">${inline(latest.summary)}</p>
 </article>`;
-  const archive = earlier.length
-    ? `<section class="archive" aria-label="Earlier">
+  const list = (items, className, label) =>
+    items.length
+      ? `<section class="archive${className}" aria-label="${label}">
 <ol>
-${earlier.map((post) => pieceItem(post, 0, true)).join("\n")}
+${items.map((post) => pieceItem(post, 0, true)).join("\n")}
 </ol>
 </section>`
-    : "";
+      : "";
   return page({
     config,
     depth: 0,
@@ -328,7 +331,7 @@ ${earlier.map((post) => pieceItem(post, 0, true)).join("\n")}
     title: config.title,
     description: config.description,
     bodyClass: "home",
-    main: featured + archive,
+    main: featured + list(sameDay, "", "Also today") + list(previous, " previous", "Previous"),
   });
 }
 
@@ -551,9 +554,12 @@ function main() {
   for (const post of posts) assert.match(index, new RegExp(escapeHtml(post.title)));
   assert.match(index, /href="admin\/index.html"/);
   assert.match(index, /href="essays.html"/);
-  assert.match(index, /href="notes.html"/);
-  assert.match(index, /href="quotes.html"/);
+  assert.doesNotMatch(index, />Earlier</);
   assert.doesNotMatch(index, /Read the /);
+  for (const kind of Object.keys(KINDS)) {
+    const kindPage = fs.readFileSync(path.join(docsDir, KIND_FILE[kind]), "utf8");
+    assert.match(kindPage, new RegExp(`<h1>${KIND_HEADING[kind]}</h1>|${KIND_EMPTY[kind]}`));
+  }
   const essays = fs.readFileSync(path.join(docsDir, "essays.html"), "utf8");
   assert.match(essays, /<h1>Essays<\/h1>/);
   assert.doesNotMatch(essays, />Note</);
