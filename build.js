@@ -302,8 +302,14 @@ function firstSentence(body) {
 
 function page({ config, depth, pathname, title, description, bodyClass, main }) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
-  const onAbout = pathname === "about.html";
   const fullTitle = title === config.title ? config.title : `${title} · ${config.title}`;
+  const nav = [
+    ["essays.html", "Essays"],
+    ["notes.html", "Notes"],
+    ["quotes.html", "Quotes"],
+    ["about.html", "About"],
+    ["admin/index.html", "Edit"],
+  ].map(([href, label]) => `<a href="${prefix}${href}"${pathname === href ? ` aria-current="page"` : ""}>${label}</a>`).join("");
   const canonical = config.url && pathname
     ? `<link rel="canonical" href="${escapeHtml(`${config.url}/${pathname}`)}">`
     : "";
@@ -317,7 +323,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=5">
+<link rel="stylesheet" href="${prefix}site.css?v=6">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -326,7 +332,7 @@ ${canonical}
 <header class="mast">
 <div class="mast-row">
 <a class="wordmark" href="${prefix}index.html">${escapeHtml(config.title)}</a>
-<nav aria-label="Site"><a href="${prefix}about.html"${onAbout ? ` aria-current="page"` : ""}>About</a><a href="${prefix}admin/index.html">Edit</a></nav>
+<nav aria-label="Site">${nav}</nav>
 </div>
 ${bodyClass === "home" ? `<p class="tagline">${escapeHtml(config.description)}</p>` : ""}
 </header>

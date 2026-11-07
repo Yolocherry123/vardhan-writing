@@ -91,8 +91,8 @@ a:focus-visible {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding-bottom: 1.1em;
-  margin-bottom: 2.4em;
+  padding-bottom: 0.9em;
+  margin-bottom: 1.5em;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -113,7 +113,14 @@ a:focus-visible {
 
 .tagline { order: 2; }
 
-.mast nav { order: 3; margin-top: 0.85em; }
+.mast nav {
+  order: 3;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35em 1.15rem;
+  margin-top: 0.85em;
+}
 
 .page .wordmark {
   font-size: 1em;
@@ -128,8 +135,6 @@ a:focus-visible {
   text-decoration: none;
 }
 
-.mast nav a + a { margin-left: 1.25rem; }
-
 .mast nav a:hover,
 .mast nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: 0.18em; }
 
@@ -141,10 +146,10 @@ a:focus-visible {
   text-align: center;
 }
 
-.featured { margin-top: 2.6em; text-align: center; }
+.featured { margin-top: 0.2em; text-align: center; }
 
 .kicker {
-  margin: 0 0 0.8em;
+  margin: 0 0 0.12em;
   font-size: 1em;
   font-weight: 400;
   letter-spacing: 0.16em;
@@ -189,13 +194,13 @@ a.kicker:hover {
 }
 
 .dateline {
-  margin: 0.8em 0 0;
+  margin: 0.15em 0 0;
   font-size: 1em;
   text-align: center;
 }
 
 .dek {
-  margin: 1.4em auto 0;
+  margin: 0.4em auto 0;
   max-width: 48ch;
   font-size: 1em;
   line-height: 1.45;
@@ -212,7 +217,7 @@ a.kicker:hover {
 .continue a { text-underline-offset: 0.16em; }
 
 .archive {
-  margin-top: 2.4em;
+  margin-top: 1.35em;
   text-align: center;
 }
 
@@ -242,8 +247,8 @@ a.kicker:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35em;
-  padding: 1.15em 0;
+  gap: 0.12em;
+  padding: 0.75em 0;
   text-align: center;
 }
 
@@ -271,7 +276,7 @@ a.kicker:hover {
   text-transform: uppercase;
 }
 
-.post .dateline { margin-bottom: 2em; }
+.post .dateline { margin-bottom: 0.65em; }
 
 .prose {
   font-size: 1em;
@@ -378,7 +383,7 @@ a.kicker:hover {
 @media (max-width: 560px) {
   .sheet { padding-top: 1.4rem; }
 
-  .archive li { padding: 1em 0; }
+  .archive li { padding: 0.7em 0; }
 }
 
 @media print {
