@@ -9,7 +9,9 @@ const root = __dirname;
 const writingDir = path.join(root, "writing");
 const docsDir = path.join(root, "docs");
 const KINDS = { essay: "Essay", note: "Note", quote: "Quote" };
-const READ = { essay: "Read the essay", note: "Read the note", quote: "Read the quote" };
+const KIND_FILE = { essay: "essays.html", note: "notes.html", quote: "quotes.html" };
+const KIND_HEADING = { essay: "Essays", note: "Notes", quote: "Quotes" };
+const KIND_EMPTY = { essay: "No essays yet.", note: "No notes yet.", quote: "No quotes yet." };
 
 function escapeHtml(value) {
   return String(value)
@@ -231,7 +233,6 @@ function loadPosts() {
     if (!KINDS[data.kind]) throw new Error(`${filename}: kind must be essay, note, or quote`);
     if (!body) throw new Error(`${filename}: the piece is empty`);
     if (!data.summary) data.summary = firstSentence(body);
-    if (data.kind === "quote" && !data.attribution) data.attribution = "";
     return {
       title: data.title,
       date: identity.date,
@@ -257,7 +258,6 @@ function firstSentence(body) {
 
 function page({ config, depth, pathname, title, description, bodyClass, main }) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
-  const onWriting = bodyClass === "home" || (pathname && pathname.startsWith("posts/"));
   const onAbout = pathname === "about.html";
   const fullTitle = title === config.title ? config.title : `${title} · ${config.title}`;
   const canonical = config.url && pathname
@@ -273,7 +273,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=5">
+<link rel="stylesheet" href="${prefix}site.css?v=4">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -282,14 +282,13 @@ ${canonical}
 <header class="mast">
 <div class="mast-row">
 <a class="wordmark" href="${prefix}index.html">${escapeHtml(config.title)}</a>
-<nav aria-label="Site"><a href="${prefix}index.html"${onWriting ? ` aria-current="page"` : ""}>Writing</a><a href="${prefix}about.html"${onAbout ? ` aria-current="page"` : ""}>About</a><a href="${prefix}admin/index.html">Edit</a></nav>
+<nav aria-label="Site"><a href="${prefix}about.html"${onAbout ? ` aria-current="page"` : ""}>About</a><a href="${prefix}admin/index.html">Edit</a></nav>
 </div>
 ${bodyClass === "home" ? `<p class="tagline">${escapeHtml(config.description)}</p>` : ""}
 </header>
 <main id="content">
 ${main}
 </main>
-<footer class="colophon"><a href="${prefix}index.html">${escapeHtml(config.author)}</a></footer>
 </div>
 </body>
 </html>
@@ -310,21 +309,16 @@ function renderHome(config, posts) {
   }
   const [latest, ...earlier] = posts;
   const featured = `<article class="featured">
-<p class="kicker">${KINDS[latest.kind]}</p>
+${kindLink(latest.kind, 0)}
 <h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
 <p class="dateline"><time datetime="${latest.date}">${formatDate(latest.date)}</time></p>
 <p class="dek">${inline(latest.summary)}</p>
-<p class="continue"><a href="posts/${latest.slug}.html">${READ[latest.kind]}</a></p>
 </article>`;
   const archive = earlier.length
     ? `<section class="archive" aria-labelledby="earlier-heading">
 <h2 id="earlier-heading">Earlier</h2>
 <ol>
-${earlier.map((post) => `<li>
-<span class="kicker">${KINDS[post.kind]}</span>
-<a class="title" href="posts/${post.slug}.html">${escapeHtml(post.title)}</a>
-<time datetime="${post.date}">${formatDate(post.date, "short")}</time>
-</li>`).join("\n")}
+${earlier.map((post) => pieceItem(post, 0, true)).join("\n")}
 </ol>
 </section>`
     : "";
@@ -336,6 +330,41 @@ ${earlier.map((post) => `<li>
     description: config.description,
     bodyClass: "home",
     main: featured + archive,
+  });
+}
+
+function kindLink(kind, depth) {
+  const prefix = depth === 0 ? "" : "../".repeat(depth);
+  return `<a class="kicker" href="${prefix}${KIND_FILE[kind]}">${KINDS[kind]}</a>`;
+}
+
+function pieceItem(post, depth, showKind) {
+  const prefix = depth === 0 ? "" : "../".repeat(depth);
+  return `<li>
+${showKind ? kindLink(post.kind, depth) : ""}
+<a class="title" href="${prefix}posts/${post.slug}.html">${escapeHtml(post.title)}</a>
+<time datetime="${post.date}">${formatDate(post.date, "short")}</time>
+</li>`;
+}
+
+function renderKind(config, posts, kind) {
+  const matching = posts.filter((post) => post.kind === kind);
+  const main = matching.length
+    ? `<section class="archive" aria-label="${KIND_HEADING[kind]}">
+<h1>${KIND_HEADING[kind]}</h1>
+<ol>
+${matching.map((post) => pieceItem(post, 0, false)).join("\n")}
+</ol>
+</section>`
+    : `<p class="empty">${KIND_EMPTY[kind]}</p>`;
+  return page({
+    config,
+    depth: 0,
+    pathname: KIND_FILE[kind],
+    title: KIND_HEADING[kind],
+    description: KIND_HEADING[kind],
+    bodyClass: "home",
+    main,
   });
 }
 
@@ -353,7 +382,7 @@ function renderPost(config, post) {
     bodyClass: "page",
     main: `<article class="post">
 <p class="back"><a href="../index.html">All writing</a></p>
-<p class="kicker">${KINDS[post.kind]}</p>
+${kindLink(post.kind, 1)}
 <h1>${escapeHtml(post.title)}</h1>
 <p class="dateline"><time datetime="${post.date}">${formatDate(post.date)}</time></p>
 <div class="${proseClass}">
@@ -422,6 +451,9 @@ function writeSite(config, posts) {
   fs.rmSync(docsDir, { recursive: true, force: true });
   fs.mkdirSync(path.join(docsDir, "posts"), { recursive: true });
   fs.writeFileSync(path.join(docsDir, "index.html"), renderHome(config, posts));
+  for (const kind of Object.keys(KINDS)) {
+    fs.writeFileSync(path.join(docsDir, KIND_FILE[kind]), renderKind(config, posts, kind));
+  }
   fs.writeFileSync(path.join(docsDir, "about.html"), renderAbout(config));
   fs.writeFileSync(path.join(docsDir, "404.html"), renderMissing(config));
   fs.writeFileSync(path.join(docsDir, "favicon.svg"), favicon(config));
@@ -519,8 +551,13 @@ function main() {
   const index = fs.readFileSync(path.join(docsDir, "index.html"), "utf8");
   for (const post of posts) assert.match(index, new RegExp(escapeHtml(post.title)));
   assert.match(index, /href="admin\/index.html"/);
-  assert.match(index, /Read the /);
-  assert.doesNotMatch(index, /id="kind-quote"/);
+  assert.match(index, /href="essays.html"/);
+  assert.match(index, /href="notes.html"/);
+  assert.match(index, /href="quotes.html"/);
+  assert.doesNotMatch(index, /Read the /);
+  const essays = fs.readFileSync(path.join(docsDir, "essays.html"), "utf8");
+  assert.match(essays, /<h1>Essays<\/h1>/);
+  assert.doesNotMatch(essays, />Note</);
   const built = fs.readFileSync(path.join(docsDir, "posts", `${posts[0].slug}.html`), "utf8");
   assert.doesNotMatch(built, /<script/i);
   assert.match(built, /href="\.\.\/admin\/index.html"/);

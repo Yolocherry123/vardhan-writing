@@ -83,7 +83,7 @@ a:focus-visible {
 .sheet {
   width: min(65ch, calc(100% - 2.5rem));
   margin: 0 auto;
-  padding: 1.6rem 0 2.4rem;
+  padding: 0.9in 0 1.1in;
 }
 
 .mast {
@@ -91,8 +91,8 @@ a:focus-visible {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding-bottom: 0.75em;
-  margin-bottom: 1.5em;
+  padding-bottom: 1.1em;
+  margin-bottom: 2.4em;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -113,14 +113,7 @@ a:focus-visible {
 
 .tagline { order: 2; }
 
-.mast nav {
-  order: 3;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.45em 1.8rem;
-  margin-top: 0.7em;
-}
+.mast nav { order: 3; margin-top: 0.85em; }
 
 .page .wordmark {
   font-size: 1em;
@@ -135,23 +128,23 @@ a:focus-visible {
   text-decoration: none;
 }
 
+.mast nav a + a { margin-left: 1.25rem; }
+
 .mast nav a:hover,
 .mast nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: 0.18em; }
 
 .tagline {
-  max-width: 34em;
-  margin: 0.7em 0 0;
+  margin: 0.85em 0 0;
   font-size: 1em;
   font-style: normal;
-  line-height: 1.5;
+  line-height: 1.45;
   text-align: center;
-  text-wrap: balance;
 }
 
-.featured { margin-top: 1.5em; text-align: center; }
+.featured { margin-top: 2.6em; text-align: center; }
 
 .kicker {
-  margin: 0 0 0.4em;
+  margin: 0 0 0.8em;
   font-size: 1em;
   font-weight: 400;
   letter-spacing: 0.16em;
@@ -162,13 +155,20 @@ a:focus-visible {
 .featured h1,
 .post h1 {
   margin: 0;
-  font-size: 1.05em;
+  font-size: 1em;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1.4;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
   text-transform: uppercase;
   text-align: center;
   text-wrap: balance;
+}
+
+a.kicker { text-decoration: none; }
+
+a.kicker:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .featured h1 a,
@@ -189,13 +189,13 @@ a:focus-visible {
 }
 
 .dateline {
-  margin: 0.4em 0 0;
+  margin: 0.8em 0 0;
   font-size: 1em;
   text-align: center;
 }
 
 .dek {
-  margin: 0.75em auto 0;
+  margin: 1.4em auto 0;
   max-width: 48ch;
   font-size: 1em;
   line-height: 1.45;
@@ -205,16 +205,17 @@ a:focus-visible {
 }
 
 .continue {
-  margin: 0.75em 0 0;
+  margin: 1.6em 0 0;
   text-align: center;
 }
 
 .continue a { text-underline-offset: 0.16em; }
 
-.archive { margin-top: 2em; text-align: center; }
+.archive { margin-top: 3.2em; text-align: center; }
 
+.archive h1,
 .archive h2 {
-  margin: 0 0 0.45em;
+  margin: 0 0 1.2em;
   font-size: 1em;
   font-weight: 400;
   letter-spacing: 0.16em;
@@ -230,11 +231,10 @@ a:focus-visible {
 
 .archive li {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: baseline;
-  gap: 0.2em 0.85em;
-  padding: 0.28em 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35em;
+  padding: 1.15em 0;
   text-align: center;
 }
 
@@ -244,15 +244,14 @@ a:focus-visible {
   margin: 0;
   font-size: 1em;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.45;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.archive .kicker {
+.archive a.kicker {
   margin: 0;
   letter-spacing: 0.12em;
-  text-align: center;
 }
 
 .back { margin: 0 0 2em; text-align: center; }
@@ -358,7 +357,7 @@ a:focus-visible {
 .attribution cite { font-style: italic; }
 
 .colophon {
-  margin-top: 2em;
+  margin-top: 3.5em;
   text-align: center;
 }
 
@@ -368,7 +367,9 @@ a:focus-visible {
 }
 
 @media (max-width: 560px) {
-  .sheet { padding-top: 1.2rem; }
+  .sheet { padding-top: 1.4rem; }
+
+  .archive li { padding: 1em 0; }
 }
 
 @media print {
