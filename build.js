@@ -315,8 +315,7 @@ ${kindLink(latest.kind, 0)}
 <p class="dek">${inline(latest.summary)}</p>
 </article>`;
   const archive = earlier.length
-    ? `<section class="archive" aria-labelledby="earlier-heading">
-<h2 id="earlier-heading">Earlier</h2>
+    ? `<section class="archive" aria-label="Earlier">
 <ol>
 ${earlier.map((post) => pieceItem(post, 0, true)).join("\n")}
 </ol>
