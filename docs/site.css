@@ -83,7 +83,7 @@ a:focus-visible {
 .sheet {
   width: min(65ch, calc(100% - 2.5rem));
   margin: 0 auto;
-  padding: 0.9in 0 1.1in;
+  padding: 1.6rem 0 2.4rem;
 }
 
 .mast {
@@ -91,8 +91,8 @@ a:focus-visible {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding-bottom: 1.1em;
-  margin-bottom: 2.4em;
+  padding-bottom: 0.75em;
+  margin-bottom: 1.5em;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -119,7 +119,7 @@ a:focus-visible {
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.45em 1.8rem;
-  margin-top: 1.15em;
+  margin-top: 0.7em;
 }
 
 .page .wordmark {
@@ -148,10 +148,10 @@ a:focus-visible {
   text-wrap: balance;
 }
 
-.featured { margin-top: 2.8em; text-align: center; }
+.featured { margin-top: 1.5em; text-align: center; }
 
 .kicker {
-  margin: 0 0 0.8em;
+  margin: 0 0 0.4em;
   font-size: 1em;
   font-weight: 400;
   letter-spacing: 0.16em;
@@ -189,13 +189,13 @@ a:focus-visible {
 }
 
 .dateline {
-  margin: 0.8em 0 0;
+  margin: 0.4em 0 0;
   font-size: 1em;
   text-align: center;
 }
 
 .dek {
-  margin: 1.4em auto 0;
+  margin: 0.75em auto 0;
   max-width: 48ch;
   font-size: 1em;
   line-height: 1.45;
@@ -205,16 +205,16 @@ a:focus-visible {
 }
 
 .continue {
-  margin: 1.6em 0 0;
+  margin: 0.75em 0 0;
   text-align: center;
 }
 
 .continue a { text-underline-offset: 0.16em; }
 
-.archive { margin-top: 3.6em; text-align: center; }
+.archive { margin-top: 2em; text-align: center; }
 
 .archive h2 {
-  margin: 0 0 1em;
+  margin: 0 0 0.45em;
   font-size: 1em;
   font-weight: 400;
   letter-spacing: 0.16em;
@@ -230,19 +230,18 @@ a:focus-visible {
 
 .archive li {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.28em;
-  padding: 1.15em 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.2em 0.85em;
+  padding: 0.28em 0;
   text-align: center;
 }
-
-.archive li + li { border-top: 1px solid var(--rule); }
 
 .archive time { font-variant-numeric: tabular-nums; }
 
 .archive a.title {
-  margin: 0.15em 0;
+  margin: 0;
   font-size: 1em;
   font-weight: 700;
   line-height: 1.4;
@@ -359,7 +358,7 @@ a:focus-visible {
 .attribution cite { font-style: italic; }
 
 .colophon {
-  margin-top: 3.5em;
+  margin-top: 2em;
   text-align: center;
 }
 
@@ -369,9 +368,7 @@ a:focus-visible {
 }
 
 @media (max-width: 560px) {
-  .sheet { padding-top: 1.4rem; }
-
-  .archive li { padding: 1em 0; }
+  .sheet { padding-top: 1.2rem; }
 }
 
 @media print {
