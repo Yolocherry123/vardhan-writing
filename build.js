@@ -558,7 +558,20 @@ function writeSite(config, posts) {
     fs.writeFileSync(path.join(docsDir, "posts", `${post.slug}.html`), renderPost(config, post));
   }
   copyStatic();
+  writeCname(config);
   if (config.url) writeFeed(config, posts);
+}
+
+function writeCname(config) {
+  if (!config.url) return;
+  let host = "";
+  try {
+    host = new URL(config.url).host;
+  } catch {
+    return;
+  }
+  if (!host || host.endsWith("github.io")) return;
+  fs.writeFileSync(path.join(docsDir, "CNAME"), `${host}\n`);
 }
 
 function writeFeed(config, posts) {
@@ -705,6 +718,9 @@ function main() {
   const config = loadConfig();
   const posts = loadPosts();
   writeSite(config, posts);
+  if (config.url && !new URL(config.url).host.endsWith("github.io")) {
+    assert.equal(fs.readFileSync(path.join(docsDir, "CNAME"), "utf8").trim(), new URL(config.url).host);
+  }
   const index = fs.readFileSync(path.join(docsDir, "index.html"), "utf8");
   for (const post of posts) assert.match(index, new RegExp(escapeHtml(post.title)));
   assert.match(index, /href="edit.html"/);
