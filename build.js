@@ -346,7 +346,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=11">
+<link rel="stylesheet" href="${prefix}site.css?v=12">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -383,17 +383,20 @@ function renderHome(config, posts) {
   const today = posts.filter((post) => post.date === posts[0].date);
   const previous = posts.filter((post) => post.date !== posts[0].date);
   const [latest, ...sameDay] = today;
+  const lead = latest.kind === "note"
+    ? `<p class="dek align-${latest.align}">${inline(latest.summary)}</p>`
+    : homePreview(latest);
   const featured = `<article class="featured">
 ${kindLink(latest.kind, 0)}
 <h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
 <p class="dateline"><time datetime="${latest.instant ? latest.instant.toISOString() : latest.date}">${formatDate(latest.when || latest.date)}</time></p>
-<p class="dek align-${latest.align}">${inline(latest.summary)}</p>
+${lead}
 </article>`;
   const list = (items, className, label) =>
     items.length
       ? `<section class="archive${className}" aria-label="${label}">
 <ol>
-${items.map((post) => pieceItem(post, 0, true)).join("\n")}
+${items.map((post) => pieceItem(post, 0, true, true)).join("\n")}
 </ol>
 </section>`
       : "";
@@ -413,12 +416,30 @@ function kindLink(kind, depth) {
   return `<a class="kicker" href="${prefix}${KIND_FILE[kind]}">${KINDS[kind]}</a>`;
 }
 
-function pieceItem(post, depth, showKind) {
+function quoteCredit(post) {
+  if (post.kind !== "quote" || !post.attribution) return "";
+  const align = pieceAlign(post.align);
+  return `<p class="attribution align-${align}">${escapeHtml(post.attribution)}${post.source ? `, <cite>${escapeHtml(post.source)}</cite>` : ""}</p>`;
+}
+
+function homePreview(post) {
+  const align = pieceAlign(post.align);
+  if (post.kind === "quote") {
+    return `<div class="home-quote prose quote align-${align}">${post.html}</div>${quoteCredit(post)}`;
+  }
+  if (post.kind === "essay" && post.summary) {
+    return `<p class="dek align-${align}">${inline(post.summary)}</p>`;
+  }
+  return "";
+}
+
+function pieceItem(post, depth, showKind, preview) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
   return `<li>
 ${showKind ? kindLink(post.kind, depth) : ""}
 <a class="title" href="${prefix}posts/${post.slug}.html">${escapeHtml(post.title)}</a>
 <time datetime="${post.instant ? post.instant.toISOString() : post.date}">${formatDate(post.when || post.date, "short")}</time>
+${preview ? homePreview(post) : ""}
 </li>`;
 }
 
@@ -445,9 +466,7 @@ ${matching.map((post) => pieceItem(post, 0, false)).join("\n")}
 
 function renderPost(config, post) {
   const align = pieceAlign(post.align);
-  const credit = post.kind === "quote" && post.attribution
-    ? `<p class="attribution align-${align}">${escapeHtml(post.attribution)}${post.source ? `, <cite>${escapeHtml(post.source)}</cite>` : ""}</p>`
-    : "";
+  const credit = quoteCredit(post);
   const proseClass = `${post.kind === "quote" ? "prose quote" : "prose"} align-${align}`;
   return page({
     config,
@@ -626,6 +645,41 @@ function selfCheck() {
   );
   assert.match(leftPage, /class="prose align-left"/);
   assert.match(quotePage, /Simone Weil, <cite>Gravity and Grace<\/cite>/);
+  const sampleConfig = { title: "T", description: "d", author: "A", about: "b", url: "" };
+  const sampleEssay = {
+    title: "An essay",
+    date: "2026-11-08",
+    when: "2026-11-08",
+    instant: null,
+    kind: "essay",
+    summary: "The short account.",
+    attribution: "",
+    source: "",
+    align: "center",
+    slug: "an-essay",
+    html: "<p>A much longer essay body that should stay off the home page.</p>",
+  };
+  const sampleQuote = {
+    title: "Curious",
+    date: "2026-11-07",
+    when: "2026-11-07",
+    instant: null,
+    kind: "quote",
+    summary: "The sdkjf",
+    attribution: "ikk",
+    source: "dd",
+    align: "center",
+    slug: "curious",
+    html: "<p>The sdkjf lsdkjflajkh</p>",
+  };
+  const home = renderHome(sampleConfig, [sampleEssay, sampleQuote]);
+  assert.match(home, /The short account\./);
+  assert.doesNotMatch(home, /much longer essay body/);
+  assert.match(home, /The sdkjf lsdkjflajkh/);
+  assert.match(home, /ikk, <cite>dd<\/cite>/);
+  const quoteHome = renderHome(sampleConfig, [sampleQuote, sampleEssay]);
+  assert.match(quoteHome, /<div class="home-quote prose quote align-center"><p>The sdkjf lsdkjflajkh<\/p><\/div>/);
+  assert.match(quoteHome, /The short account\./);
   assert.equal(formatDate("2026-11-08"), "8 November 2026");
   assert.equal(formatDate("2026-11-07", "short"), "7 Nov 2026");
   assert.equal(formatDate("2026-11-08T03:45:06+05:30"), "8 November 2026, 3:45 am");
