@@ -9,7 +9,6 @@ const root = __dirname;
 const writingDir = path.join(root, "writing");
 const docsDir = path.join(root, "docs");
 const KINDS = { essay: "Essay", note: "Note", quote: "Quote" };
-const READ = { essay: "Read the essay", note: "Read the note", quote: "Read the quote" };
 
 function escapeHtml(value) {
   return String(value)
@@ -261,6 +260,8 @@ function firstSentence(body) {
 
 function page({ config, depth, pathname, title, description, bodyClass, main }) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
+  const onWriting = bodyClass === "home" || (pathname && pathname.startsWith("posts/"));
+  const onAbout = pathname === "about.html";
   const fullTitle = title === config.title ? config.title : `${title} · ${config.title}`;
   const canonical = config.url && pathname
     ? `<link rel="canonical" href="${escapeHtml(`${config.url}/${pathname}`)}">`
@@ -284,7 +285,7 @@ ${canonical}
 <header class="mast">
 <div class="mast-row">
 <a class="wordmark" href="${prefix}index.html">${escapeHtml(config.title)}</a>
-<nav aria-label="Site"><a href="${prefix}about.html"${bodyClass === "page" && pathname === "about.html" ? ` aria-current="page"` : ""}>About</a> <a href="${prefix}admin/index.html">Edit</a></nav>
+<nav aria-label="Site"><a href="${prefix}index.html"${onWriting ? ` aria-current="page"` : ""}>Writing</a><a href="${prefix}about.html"${onAbout ? ` aria-current="page"` : ""}>About</a><a href="${prefix}admin/index.html">Edit site</a></nav>
 </div>
 ${bodyClass === "home" ? `<p class="tagline">${escapeHtml(config.description)}</p>` : ""}
 </header>
@@ -310,26 +311,11 @@ function renderHome(config, posts) {
       main: `<p class="empty">Nothing posted yet.</p>`,
     });
   }
-  const [latest, ...earlier] = posts;
-  const featured = `<article class="featured">
-<p class="kicker">${KINDS[latest.kind]}</p>
-<h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
-<p class="dateline"><time datetime="${latest.date}">${formatDate(latest.date)}</time></p>
-<p class="dek">${inline(latest.summary)}</p>
-<p class="continue"><a href="posts/${latest.slug}.html">${READ[latest.kind]}</a></p>
-</article>`;
-  const archive = earlier.length
-    ? `<section class="archive" aria-labelledby="earlier-heading">
-<h2 id="earlier-heading">Earlier</h2>
-<ol>
-${earlier.map((post) => `<li>
-<time datetime="${post.date}">${formatDate(post.date, "short")}</time>
-<a class="title" href="posts/${post.slug}.html">${escapeHtml(post.title)}</a>
-<span class="kicker">${KINDS[post.kind]}</span>
-</li>`).join("\n")}
-</ol>
-</section>`
-    : "";
+  const items = posts.map((post) => `<li>
+<p class="meta"><span class="kicker">${KINDS[post.kind]}</span><time datetime="${post.date}">${formatDate(post.date)}</time></p>
+<h3><a href="posts/${post.slug}.html">${escapeHtml(post.title)}</a></h3>
+<p class="dek">${inline(post.summary)}</p>
+</li>`).join("\n");
   return page({
     config,
     depth: 0,
@@ -337,7 +323,11 @@ ${earlier.map((post) => `<li>
     title: config.title,
     description: config.description,
     bodyClass: "home",
-    main: featured + archive,
+    main: `<section class="index" aria-label="Writing">
+<ol>
+${items}
+</ol>
+</section>`,
   });
 }
 
@@ -354,7 +344,7 @@ function renderPost(config, post) {
     description: post.summary,
     bodyClass: "page",
     main: `<article class="post">
-<p class="back"><a href="../index.html">All writing</a></p>
+<p class="back"><a href="../index.html">Back to writing</a></p>
 <p class="kicker">${KINDS[post.kind]}</p>
 <h1>${escapeHtml(post.title)}</h1>
 <p class="dateline"><time datetime="${post.date}">${formatDate(post.date)}</time></p>

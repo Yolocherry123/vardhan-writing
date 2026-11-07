@@ -102,161 +102,121 @@ a:focus-visible {
   line-height: 1.45;
 }
 
-.home .mast {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+.mast {
+  padding-bottom: 0.9em;
+  margin-bottom: 1.8em;
+  border-bottom: 1px solid var(--rule);
 }
 
-.home .mast-row { display: contents; }
-
-.home .wordmark { order: 1; }
-
-.home .tagline { order: 2; }
-
-.home .mast nav { order: 3; margin-top: 0.35em; }
-
-.home .wordmark { letter-spacing: 0.18em; }
-
-.page .wordmark {
-  font-size: 1em;
-  font-style: normal;
+.mast nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35em 1.15rem;
 }
 
 .mast nav a {
   font-size: 1em;
   font-weight: 400;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   text-decoration: none;
 }
 
-.mast nav a + a { margin-left: 1.25rem; }
-
 .mast nav a:hover,
-.mast nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: 0.18em; }
+.mast nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
 
 .tagline {
-  margin: 0.8em 0 0;
+  margin: 0.45em 0 0;
   font-size: 1em;
   font-style: normal;
   line-height: 1.45;
-  text-align: center;
+  text-align: left;
 }
-
-.page .mast {
-  padding-bottom: 0.8em;
-  margin-bottom: 2em;
-  border-bottom: 1px solid var(--rule);
-}
-
-.featured { margin-top: 3em; text-align: center; }
 
 .kicker {
-  margin: 0 0 0.8em;
-  font-size: 1em;
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  text-align: center;
-}
-
-.featured h1,
-.post h1 {
   margin: 0;
   font-size: 1em;
   font-weight: 400;
-  letter-spacing: 0.08em;
-  line-height: 1.45;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  text-align: center;
+  text-align: left;
+}
+
+.post h1 {
+  margin: 0.35em 0 0;
+  font-size: 1.15em;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-align: left;
   text-wrap: balance;
 }
 
-.featured h1 a,
-.archive a.title,
 .wordmark,
 .back a,
-.colophon a {
+.colophon a,
+.index h3 a {
   text-decoration: none;
 }
 
-.featured h1 a:hover,
-.archive a.title:hover,
 .wordmark:hover,
 .back a:hover,
-.colophon a:hover {
+.colophon a:hover,
+.index h3 a:hover {
   text-decoration: underline;
   text-underline-offset: 0.16em;
 }
 
 .dateline {
-  margin: 0.8em 0 0;
+  margin: 0.45em 0 0;
   font-size: 1em;
-  text-align: center;
-}
-
-.dek {
-  margin: 1.4em 0 0;
-  font-size: 1em;
-  line-height: 1.45;
   text-align: left;
-  text-indent: 0.5in;
-  text-wrap: pretty;
 }
 
-.continue {
-  margin: 1.6em 0 0;
-  text-align: center;
-}
-
-.continue a { text-underline-offset: 0.16em; }
-
-.archive { margin-top: 3em; }
-
-.archive h2 {
-  margin: 0 0 1em;
-  font-size: 1em;
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  text-align: center;
-}
-
-.archive ol {
+.index ol {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.archive li {
-  display: grid;
-  grid-template-columns: 12ch minmax(0, 1fr) auto;
-  grid-template-areas: "date title kind";
-  column-gap: 1.25ch;
+.index li {
+  padding: 1.15em 0;
+  border-top: 1px solid var(--rule);
+}
+
+.index li:first-child {
+  border-top: 0;
+}
+
+.index .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em 0.9em;
   align-items: baseline;
-  padding: 0.45em 0;
+  margin: 0 0 0.3em;
 }
 
-.archive time {
-  grid-area: date;
-  font-variant-numeric: tabular-nums;
+.index h3 {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: left;
 }
 
-.archive a.title {
-  grid-area: title;
+.index .dek {
+  margin: 0.4em 0 0;
+  text-indent: 0;
+}
+
+.dek {
+  margin: 0;
   font-size: 1em;
   line-height: 1.45;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.archive .kicker {
-  grid-area: kind;
-  margin: 0;
-  letter-spacing: 0.08em;
-  text-align: right;
+  text-align: left;
+  text-wrap: pretty;
 }
 
 .back { margin: 0 0 2em; }
@@ -371,22 +331,13 @@ a:focus-visible {
 @media (max-width: 560px) {
   .sheet { padding-top: 1.4rem; }
 
-  .dek,
+  .mast-row { flex-wrap: wrap; }
+
   .prose p { text-indent: 1.5em; }
-
-  .archive li {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "date kind"
-      "title title";
-    row-gap: 0.15em;
-  }
-
-  .archive .kicker { text-align: right; }
 }
 
 @media print {
-  .mast nav, .back, .continue, .colophon { display: none; }
+  .mast nav, .back, .colophon { display: none; }
   .sheet { width: auto; padding: 0; }
   a { text-decoration: none; }
 }
