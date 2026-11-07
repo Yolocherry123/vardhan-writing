@@ -231,9 +231,7 @@ function loadPosts() {
     if (!KINDS[data.kind]) throw new Error(`${filename}: kind must be essay, note, or quote`);
     if (!body) throw new Error(`${filename}: the piece is empty`);
     if (!data.summary) data.summary = firstSentence(body);
-    if (data.kind === "quote" && !data.attribution) {
-      throw new Error(`${filename}: a quote needs an attribution`);
-    }
+    if (data.kind === "quote" && !data.attribution) data.attribution = "";
     return {
       title: data.title,
       date: identity.date,
@@ -259,6 +257,7 @@ function firstSentence(body) {
 
 function page({ config, depth, pathname, title, description, bodyClass, main }) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
+  const onWriting = bodyClass === "home" || (pathname && pathname.startsWith("posts/"));
   const onAbout = pathname === "about.html";
   const fullTitle = title === config.title ? config.title : `${title} · ${config.title}`;
   const canonical = config.url && pathname
@@ -274,7 +273,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=3">
+<link rel="stylesheet" href="${prefix}site.css?v=4">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -283,7 +282,7 @@ ${canonical}
 <header class="mast">
 <div class="mast-row">
 <a class="wordmark" href="${prefix}index.html">${escapeHtml(config.title)}</a>
-<nav aria-label="Site"><a href="${prefix}about.html"${onAbout ? ` aria-current="page"` : ""}>About</a><a href="${prefix}admin/index.html">Edit</a></nav>
+<nav aria-label="Site"><a href="${prefix}index.html"${onWriting ? ` aria-current="page"` : ""}>Writing</a><a href="${prefix}about.html"${onAbout ? ` aria-current="page"` : ""}>About</a><a href="${prefix}admin/index.html">Edit</a></nav>
 </div>
 ${bodyClass === "home" ? `<p class="tagline">${escapeHtml(config.description)}</p>` : ""}
 </header>
@@ -322,9 +321,9 @@ function renderHome(config, posts) {
 <h2 id="earlier-heading">Earlier</h2>
 <ol>
 ${earlier.map((post) => `<li>
-<time datetime="${post.date}">${formatDate(post.date, "short")}</time>
-<a class="title" href="posts/${post.slug}.html">${escapeHtml(post.title)}</a>
 <span class="kicker">${KINDS[post.kind]}</span>
+<a class="title" href="posts/${post.slug}.html">${escapeHtml(post.title)}</a>
+<time datetime="${post.date}">${formatDate(post.date, "short")}</time>
 </li>`).join("\n")}
 </ol>
 </section>`
@@ -341,7 +340,7 @@ ${earlier.map((post) => `<li>
 }
 
 function renderPost(config, post) {
-  const credit = post.kind === "quote"
+  const credit = post.kind === "quote" && post.attribution
     ? `<p class="attribution">${escapeHtml(post.attribution)}${post.source ? `, <cite>${escapeHtml(post.source)}</cite>` : ""}</p>`
     : "";
   const proseClass = post.kind === "quote" ? "prose quote" : "prose";
