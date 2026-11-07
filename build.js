@@ -73,7 +73,7 @@ function isBlockStart(line) {
   return (
     line.startsWith("```") ||
     line.startsWith(">") ||
-    /^#{1,3}\s+/.test(line) ||
+    /^#{1,4}\s+/.test(line) ||
     /^\s*[-*]\s+/.test(line) ||
     /^\s*\d+\.\s+/.test(line) ||
     /^(-{3,}|\*{3,})$/.test(line.trim())
@@ -106,9 +106,10 @@ function renderMarkdown(markdown, depth = 0) {
       i += 1;
       continue;
     }
-    const heading = /^(#{1,3})\s+(.+)$/.exec(line);
+    const heading = /^(#{1,4})\s+(.+)$/.exec(line);
     if (heading) {
-      const level = heading[1].length === 1 ? 2 : heading[1].length;
+      const marks = heading[1].length;
+      const level = marks <= 2 ? 2 : marks;
       blocks.push(`<h${level}>${inline(heading[2].trim(), depth)}</h${level}>`);
       i += 1;
       continue;
@@ -328,7 +329,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=9">
+<link rel="stylesheet" href="${prefix}site.css?v=10">
 ${canonical}
 </head>
 <body class="${bodyClass}">
@@ -562,6 +563,10 @@ function selfCheck() {
   assert.match(renderMarkdown("Use `<script>` carefully."), /&lt;script&gt;/);
   assert.doesNotMatch(renderMarkdown("Use `<script>` carefully."), /<script>/);
   assert.match(renderMarkdown("## Section\n\nHello."), /<h2>Section<\/h2>/);
+  assert.match(renderMarkdown("### Smaller"), /<h3>Smaller<\/h3>/);
+  assert.match(renderMarkdown("#### Least"), /<h4>Least<\/h4>/);
+  assert.match(renderMarkdown("1. one\n2. two"), /<ol><li>one<\/li><li>two<\/li><\/ol>/);
+  assert.match(renderMarkdown("```\nline\n```"), /<pre><code>line<\/code><\/pre>/);
   assert.match(renderMarkdown("> A line\n>\n> Another."), /<blockquote><p>A line<\/p><p>Another\.<\/p><\/blockquote>/);
   assert.match(renderMarkdown("- one\n- two"), /<ul><li>one<\/li><li>two<\/li><\/ul>/);
   const fenced = renderMarkdown("```\n**not bold**\n```");
@@ -641,6 +646,8 @@ function main() {
   assert.doesNotMatch(built, /<script/i);
   assert.match(built, /href="\.\.\/edit.html"/);
   const editor = fs.readFileSync(path.join(docsDir, "edit.js"), "utf8");
+  assert.match(editor, /data-tool="small-heading"/);
+  assert.match(editor, /data-tool="code-block"/);
   assert.match(editor, /api\.github\.com/);
   assert.match(editor, /previousSha && current && current\.sha !== previousSha/);
   assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /src="edit\.js"/);

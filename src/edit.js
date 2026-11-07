@@ -356,14 +356,24 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
 <label>Source<input id="source" type="text"></label>
 </div>
 <div class="desk-toolbar" aria-label="Writing tools">
+<div class="desk-tool-group"><span>Marks</span>
 <button type="button" data-tool="bold">Bold</button>
 <button type="button" data-tool="italic">Italic</button>
-<button type="button" data-tool="heading">Heading</button>
-<button type="button" data-tool="list">List</button>
-<button type="button" data-tool="quote">Quote</button>
+<button type="button" data-tool="code">Code</button>
 <button type="button" data-tool="link">Link</button>
-<button type="button" data-tool="rule">Rule</button>
+</div>
+<div class="desk-tool-group"><span>Blocks</span>
+<button type="button" data-tool="text">Text</button>
+<button type="button" data-tool="heading">Heading</button>
+<button type="button" data-tool="subheading">Subheading</button>
+<button type="button" data-tool="small-heading">Small heading</button>
+<button type="button" data-tool="bullet">Bullet list</button>
+<button type="button" data-tool="number">Numbered list</button>
+<button type="button" data-tool="quote">Quote</button>
+<button type="button" data-tool="code-block">Code block</button>
+<button type="button" data-tool="rule">Divider</button>
 <button type="button" id="picture">Picture</button>
+</div>
 <input id="picture-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
 </div>
 <textarea id="body" spellcheck="true" aria-label="Body"></textarea>
@@ -431,16 +441,57 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
     el.focus();
   }
 
-  function mapLines(prefix) {
+  function selectedLines() {
     const el = bodyField();
     const start = el.selectionStart;
     const end = el.selectionEnd;
     const lineStart = el.value.lastIndexOf("\n", start - 1) + 1;
     const lineEndIndex = el.value.indexOf("\n", end);
     const lineEnd = lineEndIndex === -1 ? el.value.length : lineEndIndex;
-    const next = el.value.slice(lineStart, lineEnd).split("\n").map((line) => {
-      if (!line.trim()) return line;
-      return line.startsWith(prefix) ? line : `${prefix}${line}`;
+    return { el, lineStart, lineEnd, text: el.value.slice(lineStart, lineEnd) };
+  }
+
+  function stripBlock(line) {
+    return line.replace(/^\s*(?:#{1,4}\s+|>\s*|[-*]\s+|\d+\.\s+)/, "");
+  }
+
+  function setBlock(kind) {
+    const { el, lineStart, lineEnd, text } = selectedLines();
+    const placeholders = {
+      heading: "Heading",
+      subheading: "Subheading",
+      "small-heading": "Small heading",
+      bullet: "Item",
+      number: "Item",
+      quote: "Quote",
+    };
+    if (kind === "code-block") {
+      const inner = text.split("\n").map(stripBlock).join("\n").trim() || "code";
+      el.setRangeText(`\`\`\`\n${inner}\n\`\`\``, lineStart, lineEnd, "end");
+      el.focus();
+      return;
+    }
+    if (kind === "rule") {
+      el.setRangeText("---", lineStart, lineEnd, "end");
+      el.focus();
+      return;
+    }
+    let number = 0;
+    const next = text.split("\n").map((line) => {
+      const plain = stripBlock(line).trim();
+      if (!plain && !line.trim()) return "";
+      if (kind === "text") return plain;
+      const words = plain || placeholders[kind] || "Text";
+      if (kind === "heading") return `## ${words}`;
+      if (kind === "subheading") return `### ${words}`;
+      if (kind === "small-heading") return `#### ${words}`;
+      if (kind === "bullet") return `- ${words}`;
+      if (kind === "quote") return `> ${words}`;
+      if (kind === "number") {
+        number += 1;
+        return `${number}. ${words}`;
+      }
+      return line;
     }).join("\n");
     el.setRangeText(next, lineStart, lineEnd, "end");
     el.focus();
@@ -449,9 +500,7 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
   function applyTool(tool) {
     if (tool === "bold") wrapSelection("**", "**");
     else if (tool === "italic") wrapSelection("*", "*");
-    else if (tool === "heading") mapLines("## ");
-    else if (tool === "list") mapLines("- ");
-    else if (tool === "quote") mapLines("> ");
+    else if (tool === "code") wrapSelection("`", "`");
     else if (tool === "link") {
       const href = window.prompt("Link address");
       if (!href || !/^https?:\/\//i.test(href.trim())) {
@@ -459,11 +508,7 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
         return;
       }
       wrapSelection("[", `](${href.trim()})`);
-    } else if (tool === "rule") {
-      const el = bodyField();
-      el.setRangeText("\n\n---\n\n", el.selectionStart, el.selectionEnd, "end");
-      el.focus();
-    }
+    } else setBlock(tool);
   }
 
   async function uploadPicture(file) {
