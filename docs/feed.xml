@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+<channel>
+<title>Vardhan Madala</title>
+<link>https://yolocherry123.github.io/vardhan-writing/</link>
+<description>Notes, quotes, and longer writing.</description>
+<item>
+<title>A place to put things down</title>
+<link>https://yolocherry123.github.io/vardhan-writing/posts/a-place-to-put-things-down.html</link>
+<guid>https://yolocherry123.github.io/vardhan-writing/posts/a-place-to-put-things-down.html</guid>
+<pubDate>Sun, 08 Nov 2026 12:00:00 GMT</pubDate>
+<description>A plain page for notes, quotations, and longer pieces.</description>
+</item>
+<item>
+<title>Keep the name with the quote</title>
+<link>https://yolocherry123.github.io/vardhan-writing/posts/keep-the-name-with-the-quote.html</link>
+<guid>https://yolocherry123.github.io/vardhan-writing/posts/keep-the-name-with-the-quote.html</guid>
+<pubDate>Sat, 07 Nov 2026 12:00:00 GMT</pubDate>
+<description>A quotation without the person who wrote it is a line I will not be able to trust later.</description>
+</item>
+</channel>
+</rss>

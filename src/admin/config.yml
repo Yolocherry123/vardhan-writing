@@ -1,0 +1,74 @@
+backend:
+  name: github
+  repo: Yolocherry123/vardhan-writing
+  branch: main
+
+media_folder: writing/images
+public_folder: /images
+
+collections:
+  - name: writing
+    label: Writing
+    label_singular: Piece
+    folder: writing
+    create: true
+    extension: md
+    format: frontmatter
+    slug: "{{date | date('YYYY-MM-DD')}}-{{slug}}"
+    fields:
+      - label: Title
+        name: title
+        widget: string
+      - label: Date
+        name: date
+        widget: datetime
+        type: date
+        format: YYYY-MM-DD
+        picker_utc: true
+        default: "{{now}}"
+      - label: Kind
+        name: kind
+        widget: select
+        default: note
+        options:
+          - { label: Essay, value: essay }
+          - { label: Note, value: note }
+          - { label: Quote, value: quote }
+      - label: Summary
+        name: summary
+        widget: string
+        required: false
+        hint: "Required for an essay or a note. One sentence. A quote can leave this blank."
+      - label: Attribution
+        name: attribution
+        widget: string
+        required: false
+        hint: "Required for a quote. The person who wrote the words."
+      - label: Source
+        name: source
+        widget: string
+        required: false
+        hint: "For a quote, the book or essay, if you have it."
+      - label: Body
+        name: body
+        widget: markdown
+  - name: site
+    label: Site
+    files:
+      - label: Site settings
+        name: settings
+        file: site.config.json
+        format: json
+        fields:
+          - { label: Site name, name: title, widget: string }
+          - { label: Tagline, name: description, widget: string }
+          - { label: Author, name: author, widget: string }
+          - label: About
+            name: about
+            widget: markdown
+            hint: "Shown on the About page."
+          - label: Public URL
+            name: url
+            widget: string
+            required: false
+            hint: "The live address, with no slash at the end, such as https://username.github.io/vardhan-writing. This turns on the RSS feed."
