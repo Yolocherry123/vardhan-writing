@@ -166,6 +166,8 @@ html {
   text-rendering: optimizeLegibility;
   overflow-wrap: anywhere;
   word-break: break-word;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -182,6 +184,7 @@ body {
   hyphens: manual;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.12);
 }
 
 body.font-courier {
@@ -280,6 +283,13 @@ a:focus-visible {
   font-style: normal;
 }
 
+.nav-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45em 1.2rem;
+}
+
 .mast nav a {
   font-size: 1em;
   font-weight: 400;
@@ -287,6 +297,11 @@ a:focus-visible {
   text-transform: uppercase;
   text-decoration: underline;
   text-underline-offset: 0.18em;
+  white-space: nowrap;
+}
+
+.mast nav a[aria-current="page"] {
+  text-decoration-thickness: 2px;
 }
 
 .tagline {
@@ -295,6 +310,7 @@ a:focus-visible {
   font-style: normal;
   line-height: 1.45;
   text-align: center;
+  text-wrap: balance;
 }
 
 .featured { margin-top: 0.6em; text-align: center; }
@@ -435,6 +451,7 @@ a.kicker:hover {
   line-height: 1.45;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  text-wrap: balance;
 }
 
 .archive a.kicker {
@@ -708,6 +725,10 @@ a.kicker:hover {
   margin: 0.8em auto;
 }
 
+.desk form {
+  text-align: center;
+}
+
 .desk label {
   display: flex;
   flex-direction: column;
@@ -829,12 +850,62 @@ a.kicker:hover {
 
 @media (max-width: 560px) {
   .sheet {
-    width: min(var(--measure), calc(100% - 2rem));
-    padding-top: 2rem;
-    padding-bottom: 3rem;
+    width: min(var(--measure), calc(100% - 2rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+    padding-top: max(1.35rem, env(safe-area-inset-top, 0px));
+    padding-bottom: max(2.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .mast {
+    padding-bottom: 0.85em;
+    margin-bottom: 1.5em;
+  }
+
+  .wordmark {
+    font-size: clamp(1.48em, 7.6vw, 1.9em);
+    letter-spacing: 0.12em;
+  }
+
+  .tagline { margin-top: 0.65em; }
+
+  .mast nav {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin-top: 0.65em;
+  }
+
+  .nav-line {
+    flex-wrap: nowrap;
+    gap: 0.15em 1.15rem;
+  }
+
+  .mast nav a {
+    padding: 0.55em 0.2em;
+    letter-spacing: 0.1em;
   }
 
   .archive li { padding: 0.7em 0; }
+
+  .desk input,
+  .desk select {
+    min-height: 2.75rem;
+  }
+
+  .desk button,
+  .desk-toolbar button {
+    min-height: 2.75rem;
+    padding: 0.45em 0.7em;
+  }
+
+  .desk-fields {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .desk-fields label {
+    width: 100%;
+    flex-basis: auto;
+  }
 }
 
 @media print {

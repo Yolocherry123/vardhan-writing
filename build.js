@@ -330,13 +330,14 @@ function firstSentence(body) {
 function page({ config, depth, pathname, title, description, bodyClass, main }) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
   const fullTitle = title === config.title ? config.title : `${title} · ${config.title}`;
-  const nav = [
+  const links = [
     ["essays.html", "Essays"],
     ["notes.html", "Notes"],
     ["quotes.html", "Quotes"],
     ["about.html", "About"],
     ["edit.html", "Edit"],
-  ].map(([href, label]) => `<a href="${prefix}${href}"${pathname === href ? ` aria-current="page"` : ""}>${label}</a>`).join("");
+  ].map(([href, label]) => `<a href="${prefix}${href}"${pathname === href ? ` aria-current="page"` : ""}>${label}</a>`);
+  const nav = `<span class="nav-line">${links.slice(0, 3).join("")}</span><span class="nav-line">${links.slice(3).join("")}</span>`;
   const canonical = config.url && pathname
     ? `<link rel="canonical" href="${escapeHtml(`${config.url}/${pathname}`)}">`
     : "";
@@ -344,13 +345,13 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${escapeHtml(fullTitle)}</title>
 <meta name="description" content="${escapeHtml(description)}">
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=26">
+<link rel="stylesheet" href="${prefix}site.css?v=27">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -553,7 +554,7 @@ function redirectHome(config) {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${escapeHtml(config.title)}</title>
 <meta http-equiv="refresh" content="0; url=home.html">
 <link rel="canonical" href="${escapeHtml(target)}">
