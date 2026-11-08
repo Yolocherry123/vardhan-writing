@@ -432,7 +432,9 @@ a.kicker:hover {
   margin-top: 1.85em;
 }
 
-.archive.kind-quote h1 {
+.archive.kind-quote h1,
+.archive.kind-essay h1,
+.archive.kind-note h1 {
   margin-bottom: 0.85em;
 }
 
