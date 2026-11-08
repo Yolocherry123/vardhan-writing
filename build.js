@@ -429,7 +429,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=38">
+<link rel="stylesheet" href="${prefix}site.css?v=39">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -551,7 +551,7 @@ function renderKind(config, posts, kind) {
     ? `<section class="archive" aria-label="${KIND_HEADING[kind]}">
 <h1>${KIND_HEADING[kind]}</h1>
 <ol>
-${matching.map((post) => pieceItem(post, 0, false)).join("\n")}
+${matching.map((post) => pieceItem(post, 0, false, kind === "quote" || kind === "essay")).join("\n")}
 </ol>
 </section>`
     : `<p class="empty">${KIND_EMPTY[kind]}</p>`;
@@ -578,7 +578,6 @@ function renderPost(config, post) {
     description: post.summary,
     bodyClass: "page",
     main: `<article class="post">
-<p class="back"><a href="../home.html">All writing</a></p>
 ${kindLink(post.kind, 1)}
 <p class="dateline"><time datetime="${post.instant ? post.instant.toISOString() : post.date}">${formatDate(post.when || post.date)}</time></p>
 <h1>${escapeHtml(post.title)}</h1>
@@ -1014,9 +1013,13 @@ function main() {
   }
   const essays = fs.readFileSync(path.join(docsDir, "essays.html"), "utf8");
   assert.match(essays, /<h1>Essays<\/h1>/);
+  assert.match(essays, /class="dek"/);
   assert.doesNotMatch(essays, />Thought</);
+  const quotesBuilt = fs.readFileSync(path.join(docsDir, "quotes.html"), "utf8");
+  assert.match(quotesBuilt, /class="home-quote/);
   const built = fs.readFileSync(path.join(docsDir, "posts", `${posts[0].slug}.html`), "utf8");
   assert.doesNotMatch(built, /<script/i);
+  assert.doesNotMatch(built, /All writing/);
   assert.match(built, /href="\.\.\/edit.html"/);
   const editor = fs.readFileSync(path.join(docsDir, "edit.js"), "utf8");
   assert.match(editor, /data-tool="small-heading"/);
