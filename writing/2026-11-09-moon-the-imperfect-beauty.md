@@ -1,7 +1,7 @@
 ---
 title: moon - the imperfect beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T02:26:00+05:30
+updated: 2026-11-09T02:27:00+05:30
 kind: essay
 align: center
 summary: 
@@ -17,4 +17,4 @@ While begrudgingly trotting towards the campus gate in the intense summer heat o
 
 As my eyes scanned the pale sky glancing at the scattered wisps drifting leisurely when the bright ball of intensity almost blinded me. A few frolicking birds flew around me when something caught me by surprise, and the moment I say it, it became the absolute cynosure of my eyes.
 
-The moon
+The pearl drop in the sky
