@@ -12,6 +12,8 @@ const KINDS = { essay: "Essay", note: "Note", quote: "Quote" };
 const KIND_FILE = { essay: "essays.html", note: "notes.html", quote: "quotes.html" };
 const KIND_HEADING = { essay: "Essays", note: "Notes", quote: "Quotes" };
 const KIND_EMPTY = { essay: "No essays yet.", note: "No notes yet.", quote: "No quotes yet." };
+const TYPEFACES = ["courier", "newsreader", "lora", "charter"];
+const TYPEFACE = "courier";
 
 function escapeHtml(value) {
   return String(value)
@@ -346,10 +348,10 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=13">
+<link rel="stylesheet" href="${prefix}site.css?v=15">
 ${canonical}
 </head>
-<body class="${bodyClass}">
+<body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
 <a class="skip" href="#content">Skip to content</a>
 <div class="sheet">
 <header class="mast">
@@ -743,6 +745,7 @@ function main() {
   const index = fs.readFileSync(path.join(docsDir, "home.html"), "utf8");
   for (const post of posts) assert.match(index, new RegExp(escapeHtml(post.title)));
   assert.match(index, /href="edit.html"/);
+  assert.match(index, new RegExp(`class="home font-${TYPEFACE}"`));
   assert.match(fs.readFileSync(path.join(docsDir, "index.html"), "utf8"), /url=home\.html/);
   assert.match(index, /href="essays.html"/);
   assert.doesNotMatch(index, />Earlier</);
