@@ -164,6 +164,8 @@ body.font-charter {
 html {
   font-size: 100%;
   text-rendering: optimizeLegibility;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 body {
@@ -221,11 +223,18 @@ a:focus-visible {
 
 .skip:focus { transform: none; }
 
+.sheet,
+.sheet * {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .sheet {
   width: min(var(--measure), calc(100% - 3rem));
   margin: 0 auto;
   padding: 4.25rem 0 5rem;
-  overflow-wrap: anywhere;
 }
 
 .mast {
@@ -454,7 +463,9 @@ a.kicker:hover {
   margin: 0 0 1.05em;
   text-indent: 0;
   text-align: center;
-  text-wrap: pretty;
+  text-wrap: wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .prose img {
