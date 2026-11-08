@@ -245,12 +245,13 @@ a:focus-visible {
   order: 1;
   color: inherit;
   font-family: var(--display);
+  font-size: 1.9em;
   text-decoration: underline;
-  text-underline-offset: 0.18em;
-  font-weight: 400;
-  letter-spacing: 0.18em;
+  text-underline-offset: 0.16em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  line-height: 1.4;
+  line-height: 1.15;
 }
 
 .tagline { order: 2; }
@@ -266,7 +267,6 @@ a:focus-visible {
 }
 
 .page .wordmark {
-  font-size: 1em;
   font-style: normal;
 }
 
@@ -290,7 +290,7 @@ a:focus-visible {
 .featured { margin-top: 0.6em; text-align: center; }
 
 .kicker {
-  margin: 0 0 0.2em;
+  margin: 0;
   color: var(--quiet);
   font-family: var(--display);
   font-size: 0.92em;
@@ -341,7 +341,7 @@ a.kicker:hover {
 }
 
 .dateline {
-  margin: 0.35em 0 0;
+  margin: 0.12em 0 0;
   color: var(--quiet);
   font-family: var(--display);
   font-size: 0.92em;
@@ -349,7 +349,7 @@ a.kicker:hover {
 }
 
 .dek {
-  margin: 0.75em auto 0;
+  margin: 0.35em auto 0;
   max-width: 48ch;
   font-size: 1em;
   line-height: 1.6;
@@ -359,7 +359,7 @@ a.kicker:hover {
 }
 
 .home-quote {
-  margin: 0.75em auto 0;
+  margin: 0.35em auto 0;
   max-width: 48ch;
 }
 
@@ -404,8 +404,8 @@ a.kicker:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.28em;
-  padding: 1.2em 0 1.35em;
+  gap: 0.08em;
+  padding: 0.85em 0;
   text-align: center;
 }
 
@@ -441,7 +441,7 @@ a.kicker:hover {
   text-transform: uppercase;
 }
 
-.post .dateline { margin-bottom: 0.65em; }
+.post .dateline { margin-bottom: 0.4em; }
 
 .prose {
   font-size: 1em;
@@ -770,7 +770,7 @@ a.kicker:hover {
     padding-bottom: 3rem;
   }
 
-  .archive li { padding: 1em 0 1.1em; }
+  .archive li { padding: 0.7em 0; }
 }
 
 @media print {
