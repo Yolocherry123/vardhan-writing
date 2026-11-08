@@ -41,8 +41,8 @@
     status.textContent = found.length === 1 ? "1 piece" : `${found.length} pieces`;
     results.innerHTML = found.map((piece) => `<li>
 <a class="kicker" href="${escapeHtml(piece.kindHref)}">${escapeHtml(piece.kind)}</a>
-<a class="title" href="${escapeHtml(piece.href)}">${escapeHtml(piece.title)}</a>
 <time>${escapeHtml(piece.when)}</time>
+<a class="title" href="${escapeHtml(piece.href)}">${escapeHtml(piece.title)}</a>
 </li>`).join("");
   }
 

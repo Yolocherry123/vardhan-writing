@@ -429,7 +429,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=37">
+<link rel="stylesheet" href="${prefix}site.css?v=38">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -478,8 +478,8 @@ function renderHome(config, posts) {
   const lead = homePreview(latest);
   const featured = `<article class="featured">
 ${kindLink(latest.kind, 0)}
-<h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
 <p class="dateline"><time datetime="${latest.instant ? latest.instant.toISOString() : latest.date}">${formatDate(latest.when || latest.date)}</time></p>
+<h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
 ${lead}
 </article>`;
   const list = (items, className, label) =>
@@ -539,8 +539,8 @@ function pieceItem(post, depth, showKind, preview) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
   return `<li>
 ${showKind ? kindLink(post.kind, depth) : ""}
-<a class="title" href="${prefix}posts/${post.slug}.html">${escapeHtml(post.title)}</a>
 <time datetime="${post.instant ? post.instant.toISOString() : post.date}">${formatDate(post.when || post.date, "short")}</time>
+<a class="title" href="${prefix}posts/${post.slug}.html">${escapeHtml(post.title)}</a>
 ${preview ? homePreview(post) : ""}
 </li>`;
 }
@@ -580,13 +580,12 @@ function renderPost(config, post) {
     main: `<article class="post">
 <p class="back"><a href="../home.html">All writing</a></p>
 ${kindLink(post.kind, 1)}
-<h1>${escapeHtml(post.title)}</h1>
 <p class="dateline"><time datetime="${post.instant ? post.instant.toISOString() : post.date}">${formatDate(post.when || post.date)}</time></p>
-${updatedLine(post)}
+<h1>${escapeHtml(post.title)}</h1>
 <div class="${proseClass}">
 ${post.html}
 </div>
-${credit}
+${credit ? `${credit}\n` : ""}${updatedLine(post)}
 </article>`,
   });
 }
@@ -617,7 +616,7 @@ function renderSearch(config, posts) {
 <ol id="search-results"></ol>
 </section>
 </article>`,
-    after: `<script id="search-index" type="application/json">${index}</script>\n<script src="search.js"></script>\n`,
+    after: `<script id="search-index" type="application/json">${index}</script>\n<script src="search.js?v=2"></script>\n`,
   });
 }
 
@@ -865,6 +864,8 @@ function selfCheck() {
   assert.match(home, /The sdkjf lsdkjflajkh/);
   assert.match(home, /— ikk, <cite>dd<\/cite>/);
   assert.match(home, /<p class="dek">The short account\.<\/p>/);
+  assert.match(home, /Essay<\/a>\n<p class="dateline">[^<]*<time[^>]*>[^<]*<\/time><\/p>\n<h1>/);
+  assert.match(home, /<time[^>]*>7 Nov 2026<\/time>\n<a class="title"/);
   assert.match(home, /class="archive day"/);
   assert.doesNotMatch(home, /class="archive previous"/);
   const parenthetical = renderHome(sampleConfig, [{ ...sampleEssay, title: "Jaabili(Moon)" }]);
@@ -930,6 +931,9 @@ function selfCheck() {
     updated: revisedAt,
   });
   assert.match(revisedNote, new RegExp(`Last updated <time datetime="${revisedAt.toISOString()}">${formatDate(revisedAt.toISOString())}</time>`));
+  assert.match(revisedNote, /Thought<\/a>\n<p class="dateline">/);
+  assert.match(revisedNote, /<\/p>\n<h1>A note<\/h1>\n<div class="prose/);
+  assert.match(revisedNote, /<\/div>\n<p class="updated">Last updated/);
   const untouched = renderPost(sampleConfig, {
     title: "A note",
     date: "2026-11-08",
@@ -995,7 +999,7 @@ function main() {
   assert.match(index, /href="search.html"/);
   const search = fs.readFileSync(path.join(docsDir, "search.html"), "utf8");
   assert.match(search, /id="q"/);
-  assert.match(search, /src="search\.js"/);
+  assert.match(search, /src="search\.js\?v=2"/);
   assert.match(search, new RegExp(escapeRegExp(JSON.stringify(posts[0].title))));
   assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /href="search\.html"/);
   const opened = posts.find((post) => post.kind === "note" || post.kind === "essay");
