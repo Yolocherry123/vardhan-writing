@@ -72,6 +72,40 @@ function inline(raw, depth = 0) {
   return text.replace(/\u0000(\d+)\u0000/g, (_, index) => `<code>${codes[index]}</code>`);
 }
 
+function youtubeId(url) {
+  let parsed;
+  try { parsed = new URL(url.trim()); } catch { return ""; }
+  const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+  const idFrom = (value) => /^[A-Za-z0-9_-]{11}$/.test(value || "") ? value : "";
+  if (host === "youtu.be") return idFrom(parsed.pathname.split("/").filter(Boolean)[0]);
+  if (host !== "youtube.com" && host !== "m.youtube.com" && host !== "youtube-nocookie.com") return "";
+  if (parsed.pathname === "/watch") return idFrom(parsed.searchParams.get("v"));
+  const parts = parsed.pathname.split("/").filter(Boolean);
+  if (parts[0] === "embed" || parts[0] === "shorts" || parts[0] === "live") return idFrom(parts[1]);
+  return "";
+}
+
+function videoPlayer(url, caption, depth) {
+  const id = youtubeId(url);
+  if (id) {
+    const title = escapeHtml(caption || "Video");
+    return `<iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${title}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  }
+  const src = mediaUrl(url, depth);
+  if (!src || !/\.(mp4|webm)$/i.test(src.split("?")[0])) return "";
+  return `<video controls playsinline preload="metadata" src="${src}"></video>`;
+}
+
+function renderVideo(line, depth) {
+  const match = /^!video\[([^\]]*)\]\(([^)\s]+)\)$/.exec(line.trim());
+  if (!match) return "";
+  const caption = match[1].trim();
+  const player = videoPlayer(match[2], caption, depth);
+  if (!player) return "";
+  const figcaption = caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : "";
+  return `<figure class="video">${player}${figcaption}</figure>`;
+}
+
 function isBlockStart(line) {
   return (
     line.startsWith("```") ||
@@ -80,7 +114,8 @@ function isBlockStart(line) {
     /^\s*[-*]\s+/.test(line) ||
     /^\s*\d+\.\s+/.test(line) ||
     /^(-{3,}|\*{3,})$/.test(line.trim()) ||
-    /^\{(left|center|right)\}$/.test(line.trim())
+    /^\{(left|center|right)\}$/.test(line.trim()) ||
+    /^!video\[[^\]]*\]\([^)\s]+\)$/.test(line.trim())
   );
 }
 
@@ -118,6 +153,12 @@ function renderMarkdown(markdown, depth = 0) {
     }
     if (/^(-{3,}|\*{3,})$/.test(line.trim())) {
       emit("<hr>");
+      i += 1;
+      continue;
+    }
+    if (/^!video\[[^\]]*\]\([^)\s]+\)$/.test(line.trim())) {
+      const video = renderVideo(line, depth);
+      if (video) emit(video);
       i += 1;
       continue;
     }
@@ -338,6 +379,7 @@ function pieceUpdated(value, filename) {
 
 function plainText(body) {
   return body
+    .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/\{(?:left|center|right)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
@@ -347,6 +389,7 @@ function plainText(body) {
 
 function firstSentence(body) {
   const plain = body
+    .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/\{(?:left|center|right)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
@@ -382,7 +425,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=30">
+<link rel="stylesheet" href="${prefix}site.css?v=31">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -878,6 +921,13 @@ function selfCheck() {
   assert.doesNotMatch(renderMarkdown("![scan](/images/scan.png)", 0), /src="\/images/);
   assert.match(renderMarkdown("[file](/images/scan.pdf)", 1), /href="\.\.\/images\/scan.pdf"/);
   assert.doesNotMatch(renderMarkdown("![x](/images/../site.css)", 0), /src=/);
+  assert.match(renderMarkdown("!video[](https://www.youtube.com/watch?v=abcdefghijk)"), /src="https:\/\/www\.youtube-nocookie\.com\/embed\/abcdefghijk"/);
+  assert.match(renderMarkdown("!video[River](https://youtu.be/abcdefghijk)"), /title="River"/);
+  assert.match(renderMarkdown("!video[Clip](/images/clip.mp4)", 1), /<video controls playsinline preload="metadata" src="\.\.\/images\/clip\.mp4"><\/video>/);
+  assert.match(renderMarkdown("!video[](https://cdn.example.com/a.webm)"), /src="https:\/\/cdn\.example\.com\/a\.webm"/);
+  assert.doesNotMatch(renderMarkdown("!video[](javascript:alert(1))"), /src=/);
+  assert.doesNotMatch(renderMarkdown("!video[](https://evil.example/watch?v=abcdefghijk)"), /iframe/);
+  assert.equal(firstSentence("Seen.\n\n!video[](https://youtu.be/abcdefghijk)"), "Seen.");
 }
 
 function main() {
@@ -921,7 +971,11 @@ function main() {
   assert.match(editor, /data-tool="code-block"/);
   assert.match(editor, /api\.github\.com/);
   assert.match(editor, /previousSha && current && current\.sha !== previousSha/);
-  assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /src="edit\.js"/);
+  assert.match(editor, /method: "DELETE"/);
+  assert.match(editor, /id="delete"/);
+  assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /src="edit\.js\?v=/);
+  assert.match(editor, /id="video"/);
+  assert.match(editor, /id="youtube"/);
   const desk = fs.readFileSync(path.join(docsDir, "admin", "config.yml"), "utf8");
   assert.match(desk, /name: github/);
   console.log(`built ${posts.length} ${posts.length === 1 ? "piece" : "pieces"}`);

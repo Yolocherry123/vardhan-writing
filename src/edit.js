@@ -103,6 +103,27 @@
     }
   }
 
+  async function deleteFile(path, message, previousSha) {
+    const current = await readFile(path);
+    if (!current) return;
+    if (previousSha && current.sha !== previousSha) {
+      const failure = new Error("This was changed after you opened it. Reload, then delete again.");
+      failure.status = 409;
+      throw failure;
+    }
+    try {
+      await github(`/repos/${REPO}/contents/${path}`, {
+        method: "DELETE",
+        body: { message, sha: current.sha, branch: BRANCH },
+      });
+    } catch (error) {
+      if (error.status === 409) {
+        throw new Error("This was changed after you opened it. Reload, then delete again.");
+      }
+      throw error;
+    }
+  }
+
   function parseFrontMatter(raw) {
     const text = String(raw || "").replace(/\r\n/g, "\n");
     const match = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(text);
@@ -198,7 +219,7 @@
   function showSignIn(message) {
     main.innerHTML = `<section class="desk-sign">
 <h1>Sign in</h1>
-<p>A token lets this page save essays, thoughts, quotes, and pictures to your repository. It stays in this browser.</p>
+<p>A token lets this page save essays, thoughts, quotes, pictures, and videos to your repository. It stays in this browser.</p>
 <p>Create a fine-grained token for Yolocherry123/vardhan-writing with Contents set to read and write.</p>
 <p><a href="https://github.com/settings/personal-access-tokens/new">Create a token</a></p>
 <form id="sign-in">
@@ -238,7 +259,7 @@
     }
   }
 
-  async function showList() {
+  async function showList(notice) {
     main.innerHTML = `<p class="desk-status">Opening your pieces…</p>`;
     await refreshName();
     let listing;
@@ -278,6 +299,7 @@
 <button type="button" id="sign-out">Sign out</button>
 </div>
 ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button type="button" data-path="${escapeHtml(piece.path)}"><span class="kicker">${kindLabel(piece.kind)}</span><span class="title">${escapeHtml(piece.title)}</span><span>${escapeHtml(displayWhen(piece.date))}</span></button></li>`).join("")}</ol>` : `<p class="empty">Nothing posted yet.</p>`}
+${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
 </section>`;
     main.querySelectorAll("[data-new]").forEach((button) => {
       button.addEventListener("click", () => showPiece({
@@ -379,11 +401,14 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
 <button type="button" data-tool="code-block">Code block</button>
 <button type="button" data-tool="rule">Divider</button>
 <button type="button" id="picture">Picture</button>
+<button type="button" id="video">Video</button>
+<button type="button" id="youtube">YouTube</button>
 </div>
 <input id="picture-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+<input id="video-file" type="file" accept="video/mp4,video/webm,.mp4,.webm" hidden>
 </div>
 <textarea id="body" spellcheck="true" aria-label="Body"></textarea>
-<div class="desk-actions"><button type="button" id="save">Save</button></div>
+<div class="desk-actions"><button type="button" id="save">Save</button><button type="button" id="delete">Delete</button></div>
 <p id="status" class="desk-status"></p>
 </section>`;
     document.getElementById("title").value = data.title || "";
@@ -416,7 +441,17 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
       event.target.value = "";
       if (file) uploadPicture(file);
     });
+    document.getElementById("video").addEventListener("click", () => document.getElementById("video-file").click());
+    document.getElementById("video-file").addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      event.target.value = "";
+      if (file) uploadVideo(file);
+    });
+    document.getElementById("youtube").addEventListener("click", addYouTube);
     document.getElementById("save").addEventListener("click", () => savePiece(piece));
+    const remove = document.getElementById("delete");
+    if (!piece.path) remove.hidden = true;
+    remove.addEventListener("click", () => deletePiece(piece));
   }
 
   function readPieceForm() {
@@ -597,6 +632,69 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
     else setBlock(tool);
   }
 
+  function youtubeId(url) {
+    let parsed;
+    try { parsed = new URL(url.trim()); } catch { return ""; }
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    const idFrom = (value) => /^[A-Za-z0-9_-]{11}$/.test(value || "") ? value : "";
+    if (host === "youtu.be") return idFrom(parsed.pathname.split("/").filter(Boolean)[0]);
+    if (host !== "youtube.com" && host !== "m.youtube.com" && host !== "youtube-nocookie.com") return "";
+    if (parsed.pathname === "/watch") return idFrom(parsed.searchParams.get("v"));
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    if (parts[0] === "embed" || parts[0] === "shorts" || parts[0] === "live") return idFrom(parts[1]);
+    return "";
+  }
+
+  function insertMedia(syntax) {
+    const el = bodyField();
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const before = start > 0 && el.value[start - 1] !== "\n" ? "\n\n" : "";
+    const after = end < el.value.length && el.value[end] !== "\n" ? "\n\n" : "\n";
+    el.setRangeText(`${before}${syntax}${after}`, start, end, "end");
+    el.focus();
+  }
+
+  function addYouTube() {
+    const href = window.prompt("YouTube link");
+    if (!href) return;
+    const id = youtubeId(href);
+    if (!id) {
+      status("Paste a YouTube link, such as https://www.youtube.com/watch?v=…");
+      return;
+    }
+    insertMedia(`!video[](https://www.youtube.com/watch?v=${id})`);
+    status("YouTube video added. Save the piece to publish it.");
+  }
+
+  async function uploadVideo(file) {
+    const type = (file.type || "").toLowerCase();
+    const extension = ((/\.([a-z0-9]+)$/i.exec(file.name) || [])[1] || "").toLowerCase();
+    const kind = type === "video/mp4" || extension === "mp4" ? "mp4" : type === "video/webm" || extension === "webm" ? "webm" : "";
+    if (!kind) {
+      status("Use an mp4 or webm video.");
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      status("That video is too large to save here. Use one under 20 MB, or a YouTube link.");
+      return;
+    }
+    const base = file.name.replace(/\.[^.]+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "video";
+    let name = `${base}.${kind}`;
+    status("Uploading the video…");
+    try {
+      for (let n = 2; await readFile(`writing/images/${name}`); n += 1) {
+        name = `${base}-${n}.${kind}`;
+      }
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      await writeFile(`writing/images/${name}`, { base64: bytesToBase64(bytes) }, `Add video ${name}`, "");
+      insertMedia(`!video[](/images/${name})`);
+      status("Video added. Save the piece to publish it.");
+    } catch (error) {
+      status(error.message);
+    }
+  }
+
   async function uploadPicture(file) {
     const type = (file.type || "").toLowerCase();
     const allowed = { "image/png": "png", "image/jpeg": "jpg", "image/gif": "gif", "image/webp": "webp" };
@@ -669,10 +767,37 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
       piece.body = body;
       opened.originalDate = data.date;
       opened.snapshot = serializePiece(data, body);
+      const remove = document.getElementById("delete");
+      if (remove) remove.hidden = false;
       status("Saved. The public page updates in about a minute.");
     } catch (error) {
       status(error.message);
     } finally {
+      save.disabled = false;
+    }
+  }
+
+  async function deletePiece(piece) {
+    if (!piece.path) return;
+    const title = document.getElementById("title").value.trim() || "this piece";
+    if (!window.confirm(`Delete “${title}”? It leaves the site.`)) return;
+    const remove = document.getElementById("delete");
+    const save = document.getElementById("save");
+    remove.disabled = true;
+    save.disabled = true;
+    status("Deleting…");
+    try {
+      await deleteFile(
+        piece.path,
+        `Delete Piece “${piece.path.split("/").pop().replace(/\.md$/, "")}”`,
+        opened.sha,
+      );
+      opened.path = "";
+      opened.sha = "";
+      await showList("Deleted. The public page updates in about a minute.");
+    } catch (error) {
+      status(error.message);
+      remove.disabled = false;
       save.disabled = false;
     }
   }
