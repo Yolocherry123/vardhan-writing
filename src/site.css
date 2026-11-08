@@ -456,6 +456,13 @@ a.kicker:hover {
   text-wrap: pretty;
 }
 
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.75em auto;
+}
+
 .prose h2,
 .prose h3,
 .prose h4 {
