@@ -3,6 +3,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { execFileSync } = require("child_process");
 const assert = require("node:assert/strict");
 
 const root = __dirname;
@@ -295,12 +296,14 @@ function loadPosts() {
       date: identity.date,
       when: String(data.date).trim(),
       instant: identity.instant,
+      updated: pieceUpdated(data.updated, filename),
       kind: data.kind,
       summary: data.summary || firstSentence(body),
       attribution: data.attribution || "",
       source: data.source || "",
       align: pieceAlign(data.align),
       slug: identity.slug,
+      text: plainText(body),
       html: renderMarkdown(body, 1),
       homeHtml: renderMarkdown(body, 0),
     };
@@ -312,6 +315,34 @@ function loadPosts() {
 
 function pieceAlign(value) {
   return value === "left" || value === "right" ? value : "center";
+}
+
+function pieceUpdated(value, filename) {
+  if (value) {
+    const parsed = parseStamp(value, filename);
+    if (parsed.instant) return parsed.instant;
+  }
+  try {
+    const stamp = execFileSync(
+      "git",
+      ["log", "-1", "--format=%cI", "--", path.join("writing", filename)],
+      { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    ).trim();
+    if (!stamp) return null;
+    const parsed = parseStamp(stamp, filename);
+    return parsed.instant;
+  } catch {
+    return null;
+  }
+}
+
+function plainText(body) {
+  return body
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\{(?:left|center|right)\}/g, " ")
+    .replace(/[#>*_`[\]]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function firstSentence(body) {
@@ -327,13 +358,14 @@ function firstSentence(body) {
   return `${(space > 80 ? cut.slice(0, space) : cut).trim()}…`;
 }
 
-function page({ config, depth, pathname, title, description, bodyClass, main }) {
+function page({ config, depth, pathname, title, description, bodyClass, main, after = "" }) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
   const fullTitle = title === config.title ? config.title : `${title} · ${config.title}`;
   const nav = [
     ["essays.html", "Essays"],
     ["notes.html", "Notes"],
     ["quotes.html", "Quotes"],
+    ["search.html", "Search"],
     ["about.html", "About"],
     ["edit.html", "Edit"],
   ].map(([href, label]) => `<a href="${prefix}${href}"${pathname === href ? ` aria-current="page"` : ""}>${label}</a>`).join("");
@@ -350,7 +382,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=28">
+<link rel="stylesheet" href="${prefix}site.css?v=29">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -367,7 +399,7 @@ ${bodyClass === "home" ? `<p class="tagline">${escapeHtml(config.description)}</
 ${main}
 </main>
 </div>
-</body>
+${after}</body>
 </html>
 `;
 }
@@ -387,9 +419,7 @@ function renderHome(config, posts) {
   const today = posts.filter((post) => post.date === posts[0].date);
   const previous = posts.filter((post) => post.date !== posts[0].date);
   const [latest, ...sameDay] = today;
-  const lead = latest.kind === "note"
-    ? `<div class="prose align-${latest.align}">${latest.homeHtml}</div>`
-    : homePreview(latest);
+  const lead = homePreview(latest);
   const featured = `<article class="featured">
 ${kindLink(latest.kind, 0)}
 <h1><a href="posts/${latest.slug}.html">${escapeHtml(latest.title)}</a></h1>
@@ -430,10 +460,20 @@ function homePreview(post) {
   if (post.kind === "quote") {
     return `<div class="home-quote prose quote">${post.html}</div>${quoteCredit(post)}`;
   }
+  if (post.kind === "note") {
+    return `<div class="prose align-${post.align || "center"}">${post.homeHtml || ""}</div>`;
+  }
   if (post.kind === "essay" && post.summary) {
     return `<p class="dek">${inline(post.summary)}</p>`;
   }
   return "";
+}
+
+function updatedLine(post) {
+  if (post.kind === "quote" || !post.updated) return "";
+  const revised = formatDate(post.updated.toISOString());
+  if (revised === formatDate(post.when || post.date)) return "";
+  return `<p class="updated">Last updated <time datetime="${post.updated.toISOString()}">${revised}</time></p>`;
 }
 
 function pieceItem(post, depth, showKind, preview) {
@@ -483,11 +523,42 @@ function renderPost(config, post) {
 ${kindLink(post.kind, 1)}
 <h1>${escapeHtml(post.title)}</h1>
 <p class="dateline"><time datetime="${post.instant ? post.instant.toISOString() : post.date}">${formatDate(post.when || post.date)}</time></p>
+${updatedLine(post)}
 <div class="${proseClass}">
 ${post.html}
 </div>
 ${credit}
 </article>`,
+  });
+}
+
+function renderSearch(config, posts) {
+  const index = JSON.stringify(posts.map((post) => ({
+    title: post.title,
+    kind: KINDS[post.kind],
+    kindHref: KIND_FILE[post.kind],
+    href: `posts/${post.slug}.html`,
+    when: formatDate(post.when || post.date, "short"),
+    text: `${post.title} ${post.summary || ""} ${post.text || ""}`.replace(/\s+/g, " ").trim(),
+  }))).replace(/</g, "\\u003c");
+  return page({
+    config,
+    depth: 0,
+    pathname: "search.html",
+    title: "Search",
+    description: `Search ${config.title}`,
+    bodyClass: "page",
+    main: `<article class="post search">
+<h1>Search</h1>
+<form class="search-form" role="search" action="search.html">
+<input id="q" name="q" type="search" autocomplete="off" enterkeyhint="search" aria-label="Search writing" placeholder="A word or a phrase">
+</form>
+<p class="search-status" id="search-status">Type a word to search.</p>
+<section class="archive" aria-label="Search results">
+<ol id="search-results"></ol>
+</section>
+</article>`,
+    after: `<script id="search-index" type="application/json">${index}</script>\n<script src="search.js"></script>\n`,
   });
 }
 
@@ -539,6 +610,7 @@ function copyStatic() {
   fs.copyFileSync(path.join(root, "src", "site.css"), path.join(docsDir, "site.css"));
   fs.copyFileSync(path.join(root, "src", "edit.html"), path.join(docsDir, "edit.html"));
   fs.copyFileSync(path.join(root, "src", "edit.js"), path.join(docsDir, "edit.js"));
+  fs.copyFileSync(path.join(root, "src", "search.js"), path.join(docsDir, "search.js"));
   fs.cpSync(path.join(root, "src", "fonts"), path.join(docsDir, "fonts"), { recursive: true });
   fs.cpSync(path.join(root, "src", "admin"), path.join(docsDir, "admin"), { recursive: true });
   const images = path.join(writingDir, "images");
@@ -574,6 +646,7 @@ function writeSite(config, posts) {
     fs.writeFileSync(path.join(docsDir, KIND_FILE[kind]), renderKind(config, posts, kind));
   }
   fs.writeFileSync(path.join(docsDir, "about.html"), renderAbout(config));
+  fs.writeFileSync(path.join(docsDir, "search.html"), renderSearch(config, posts));
   fs.writeFileSync(path.join(docsDir, "404.html"), renderMissing(config));
   fs.writeFileSync(path.join(docsDir, "favicon.svg"), favicon(config));
   fs.writeFileSync(path.join(docsDir, ".nojekyll"), "");
@@ -733,6 +806,60 @@ function selfCheck() {
   }]);
   assert.match(noteHome, /src="images\/plane.webp"/);
   assert.doesNotMatch(noteHome, /src="\.\.\/images/);
+  const olderNoteHome = renderHome(sampleConfig, [sampleEssay, {
+    title: "An older note",
+    date: "2026-11-07",
+    when: "2026-11-07",
+    instant: null,
+    kind: "note",
+    summary: "Short.",
+    attribution: "",
+    source: "",
+    align: "left",
+    slug: "older-note",
+    html: "<p>The full older note.</p>",
+    homeHtml: "<p>The full older note.</p>",
+  }]);
+  assert.match(olderNoteHome, /class="prose align-left"><p>The full older note\.<\/p><\/div>/);
+  assert.match(olderNoteHome, /The short account\./);
+  assert.doesNotMatch(olderNoteHome, /much longer essay body/);
+  const revisedAt = new Date("2026-11-08T12:31:00+05:30");
+  const revisedNote = renderPost(sampleConfig, {
+    title: "A note",
+    date: "2026-11-08",
+    when: "2026-11-08T03:45:00+05:30",
+    instant: new Date("2026-11-08T03:45:00+05:30"),
+    kind: "note",
+    align: "left",
+    summary: "Left",
+    attribution: "",
+    source: "",
+    slug: "a-note",
+    html: "<p>Body.</p>",
+    updated: revisedAt,
+  });
+  assert.match(revisedNote, new RegExp(`Last updated <time datetime="${revisedAt.toISOString()}">${formatDate(revisedAt.toISOString())}</time>`));
+  const untouched = renderPost(sampleConfig, {
+    title: "A note",
+    date: "2026-11-08",
+    when: "2026-11-08T03:45:00+05:30",
+    instant: new Date("2026-11-08T03:45:00+05:30"),
+    kind: "note",
+    align: "center",
+    summary: "Left",
+    attribution: "",
+    source: "",
+    slug: "a-note",
+    html: "<p>Body.</p>",
+    updated: new Date("2026-11-08T03:45:00+05:30"),
+  });
+  assert.doesNotMatch(untouched, /Last updated/);
+  assert.doesNotMatch(quotePage, /Last updated/);
+  const searchPage = renderSearch(sampleConfig, [sampleEssay, sampleQuote]);
+  assert.match(searchPage, /aria-label="Search writing"/);
+  assert.match(searchPage, /id="search-index"/);
+  assert.match(searchPage, /An essay/);
+  assert.match(searchPage, /href="search\.html"/);
   assert.equal(formatDate("2026-11-08"), "8 November 2026");
   assert.equal(formatDate("2026-11-07", "short"), "7 Nov 2026");
   assert.equal(formatDate("2026-11-08T03:45:06+05:30"), "8 November 2026, 3:45 am");
@@ -767,6 +894,16 @@ function main() {
   assert.match(index, new RegExp(`class="home font-${TYPEFACE}"`));
   assert.match(fs.readFileSync(path.join(docsDir, "index.html"), "utf8"), /url=home\.html/);
   assert.match(index, /href="essays.html"/);
+  assert.match(index, /href="search.html"/);
+  const search = fs.readFileSync(path.join(docsDir, "search.html"), "utf8");
+  assert.match(search, /id="q"/);
+  assert.match(search, /src="search\.js"/);
+  assert.match(search, new RegExp(JSON.stringify(posts[0].title).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /href="search\.html"/);
+  const opened = posts.find((post) => post.kind === "note" || post.kind === "essay");
+  if (opened && opened.updated && formatDate(opened.updated.toISOString()) !== formatDate(opened.when || opened.date)) {
+    assert.match(fs.readFileSync(path.join(docsDir, "posts", `${opened.slug}.html`), "utf8"), /Last updated/);
+  }
   assert.doesNotMatch(index, />Earlier</);
   assert.doesNotMatch(index, /Read the /);
   for (const kind of Object.keys(KINDS)) {

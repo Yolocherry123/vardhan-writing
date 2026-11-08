@@ -130,6 +130,7 @@
       "---",
       fieldLine("title", data.title),
       fieldLine("date", data.date),
+      ...(data.updated ? [fieldLine("updated", data.updated)] : []),
       fieldLine("kind", data.kind),
       fieldLine("align", data.align),
       fieldLine("summary", data.summary),
@@ -624,6 +625,7 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
 
   async function savePiece(piece) {
     const data = readPieceForm();
+    data.updated = `${nowLocal()}:00+05:30`;
     const body = document.getElementById("body").value;
     if (!data.title.trim()) {
       status("Add a title.");

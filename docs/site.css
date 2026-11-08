@@ -419,6 +419,11 @@ a.kicker:hover {
   text-align: center;
 }
 
+.archive li .prose {
+  width: 100%;
+  align-self: stretch;
+}
+
 .archive time {
   color: var(--quiet);
   font-family: var(--display);
@@ -452,6 +457,15 @@ a.kicker:hover {
 }
 
 .post .dateline { margin-bottom: 0.4em; }
+
+.updated {
+  margin: 0.15em 0 0.45em;
+  color: var(--quiet);
+  font-family: var(--display);
+  font-size: 0.92em;
+  font-weight: 400;
+  text-align: center;
+}
 
 .prose {
   font-size: 1em;
@@ -591,6 +605,7 @@ a.kicker:hover {
 
 .prose.quote {
   font-size: 1em;
+  font-weight: 400;
   font-style: italic;
   text-align: center;
   line-height: 1.45;
@@ -668,7 +683,9 @@ a.kicker:hover {
 
 .attribution {
   margin: 0.2em 0 0;
-  font-size: 1em;
+  color: #2a2a2a;
+  font-size: 0.97em;
+  font-weight: 400;
   font-style: normal;
   text-align: center;
 }
@@ -682,6 +699,42 @@ a.kicker:hover {
 
 .empty {
   margin-top: 3em;
+  text-align: center;
+}
+
+.search h1 { margin-bottom: 0.8em; }
+
+.search-form {
+  margin: 0 auto;
+  max-width: 32rem;
+}
+
+.search-form input {
+  width: 100%;
+  margin: 0;
+  padding: 0.4em 0.15em;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 400;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-form input:focus {
+  outline: none;
+  border-bottom-width: 2px;
+}
+
+.search-status {
+  margin: 1.15em 0 0;
+  color: var(--quiet);
+  font-family: var(--display);
+  font-size: 0.92em;
   text-align: center;
 }
 
