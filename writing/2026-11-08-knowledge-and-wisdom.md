@@ -8,5 +8,5 @@ attribution: Miles Kington
 source: 
 ---
 
-Knowledge is known tomato is a fruit.
+Knowledge is knowing tomato is a fruit.
 Wisdom is knowing not to put it in a fruit salad.
