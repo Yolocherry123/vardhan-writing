@@ -493,14 +493,14 @@ a.kicker:hover {
 }
 
 .prose h2 {
-  font-size: 1.35em;
+  font-size: 1.12em;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .prose h3 {
-  font-size: 1.15em;
+  font-size: 1.05em;
   font-weight: 700;
   font-style: italic;
   letter-spacing: 0.02em;
@@ -508,7 +508,7 @@ a.kicker:hover {
 }
 
 .prose h4 {
-  font-size: 1.05em;
+  font-size: 1em;
   font-weight: 400;
   font-style: italic;
   letter-spacing: 0.01em;
