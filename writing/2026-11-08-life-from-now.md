@@ -8,5 +8,5 @@ attribution: Vardhan Madala
 source: 
 ---
 
-**Life didn't give me the one thing I really wanted. 
-So I'm going to make it give me everything else.**
+Life didn't give me the one thing I really wanted. 
+So I'm going to make it give me everything else.
