@@ -399,7 +399,7 @@ a.kicker:hover {
 
 .archive h1,
 .archive h2 {
-  margin: 0 0 1.2em;
+  margin: 0 0 0.2em;
   font-family: var(--display);
   font-size: 1em;
   font-weight: 400;
@@ -419,8 +419,13 @@ a.kicker:hover {
   flex-direction: column;
   align-items: center;
   gap: 0.12em;
-  padding: 1.15em 0 0.15em;
+  padding: 0.95em 0 0.15em;
   text-align: center;
+}
+
+.archive h1 + ol > li:first-child,
+.archive h2 + ol > li:first-child {
+  padding-top: 0.15em;
 }
 
 .archive li .prose {
