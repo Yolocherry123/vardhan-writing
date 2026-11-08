@@ -121,6 +121,7 @@
   color-scheme: light;
   --paper: #ffffff;
   --ink: #000000;
+  --byline: #3a3a3a;
   --quiet: #4f4f4f;
   --rule: #000000;
   --mono: "Courier Prime", "Courier New", Courier, ui-monospace, monospace;
@@ -683,7 +684,7 @@ a.kicker:hover {
 
 .attribution {
   margin: 0.2em 0 0;
-  color: #2a2a2a;
+  color: var(--byline);
   font-size: 0.97em;
   font-weight: 400;
   font-style: normal;
