@@ -432,6 +432,10 @@ a.kicker:hover {
   margin-top: 1.85em;
 }
 
+.archive.kind-quote h1 {
+  margin-bottom: 0.85em;
+}
+
 .archive li .prose {
   width: 100%;
   align-self: stretch;
