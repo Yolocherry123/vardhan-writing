@@ -4,7 +4,7 @@ A typed-manuscript site for notes, quotes, and longer pieces. Open this folder i
 
 ## Preview
 
-The pages already built are in `docs/`. Open `docs/index.html` in a browser.
+The pages already built are in `docs/`. Open `docs/home.html` in a browser.
 
 To serve them locally:
 

@@ -354,7 +354,7 @@ ${canonical}
 <div class="sheet">
 <header class="mast">
 <div class="mast-row">
-<a class="wordmark" href="${prefix}index.html">${escapeHtml(config.title)}</a>
+<a class="wordmark" href="${prefix}home.html">${escapeHtml(config.title)}</a>
 <nav aria-label="Site">${nav}</nav>
 </div>
 ${bodyClass === "home" ? `<p class="tagline">${escapeHtml(config.description)}</p>` : ""}
@@ -373,7 +373,7 @@ function renderHome(config, posts) {
     return page({
       config,
       depth: 0,
-      pathname: "index.html",
+      pathname: "home.html",
       title: config.title,
       description: config.description,
       bodyClass: "home",
@@ -403,7 +403,7 @@ ${items.map((post) => pieceItem(post, 0, true, true)).join("\n")}
   return page({
     config,
     depth: 0,
-    pathname: "index.html",
+    pathname: "home.html",
     title: config.title,
     description: config.description,
     bodyClass: "home",
@@ -475,7 +475,7 @@ function renderPost(config, post) {
     description: post.summary,
     bodyClass: "page",
     main: `<article class="post">
-<p class="back"><a href="../index.html">All writing</a></p>
+<p class="back"><a href="../home.html">All writing</a></p>
 ${kindLink(post.kind, 1)}
 <h1>${escapeHtml(post.title)}</h1>
 <p class="dateline"><time datetime="${post.instant ? post.instant.toISOString() : post.date}">${formatDate(post.when || post.date)}</time></p>
@@ -515,7 +515,7 @@ function renderMissing(config) {
     main: `<article class="post">
 <h1>This page is not here</h1>
 <div class="prose">
-<p>That address does not match a piece. The full list is on <a href="index.html">all writing</a>.</p>
+<p>That address does not match a piece. The full list is on <a href="home.html">all writing</a>.</p>
 </div>
 </article>`,
   });
@@ -543,10 +543,29 @@ function copyStatic() {
   }
 }
 
+function redirectHome(config) {
+  const target = config.url ? `${config.url}/home.html` : "home.html";
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(config.title)}</title>
+<meta http-equiv="refresh" content="0; url=home.html">
+<link rel="canonical" href="${escapeHtml(target)}">
+</head>
+<body>
+<p><a href="home.html">${escapeHtml(config.title)}</a></p>
+</body>
+</html>
+`;
+}
+
 function writeSite(config, posts) {
   fs.rmSync(docsDir, { recursive: true, force: true });
   fs.mkdirSync(path.join(docsDir, "posts"), { recursive: true });
-  fs.writeFileSync(path.join(docsDir, "index.html"), renderHome(config, posts));
+  fs.writeFileSync(path.join(docsDir, "home.html"), renderHome(config, posts));
+  fs.writeFileSync(path.join(docsDir, "index.html"), redirectHome(config));
   for (const kind of Object.keys(KINDS)) {
     fs.writeFileSync(path.join(docsDir, KIND_FILE[kind]), renderKind(config, posts, kind));
   }
@@ -590,17 +609,17 @@ function writeFeed(config, posts) {
 <rss version="2.0">
 <channel>
 <title>${escapeHtml(config.title)}</title>
-<link>${escapeHtml(config.url)}/</link>
+<link>${escapeHtml(config.url ? `${config.url}/home.html` : "home.html")}</link>
 <description>${escapeHtml(config.description)}</description>
 ${items}
 </channel>
 </rss>
 `;
   fs.writeFileSync(path.join(docsDir, "feed.xml"), feed);
-  const index = fs.readFileSync(path.join(docsDir, "index.html"), "utf8");
+  const home = fs.readFileSync(path.join(docsDir, "home.html"), "utf8");
   fs.writeFileSync(
-    path.join(docsDir, "index.html"),
-    index.replace("</head>", `<link rel="alternate" type="application/rss+xml" title="${escapeHtml(config.title)}" href="feed.xml">\n</head>`),
+    path.join(docsDir, "home.html"),
+    home.replace("</head>", `<link rel="alternate" type="application/rss+xml" title="${escapeHtml(config.title)}" href="feed.xml">\n</head>`),
   );
 }
 
@@ -721,9 +740,10 @@ function main() {
   if (config.url && !new URL(config.url).host.endsWith("github.io")) {
     assert.equal(fs.readFileSync(path.join(docsDir, "CNAME"), "utf8").trim(), new URL(config.url).host);
   }
-  const index = fs.readFileSync(path.join(docsDir, "index.html"), "utf8");
+  const index = fs.readFileSync(path.join(docsDir, "home.html"), "utf8");
   for (const post of posts) assert.match(index, new RegExp(escapeHtml(post.title)));
   assert.match(index, /href="edit.html"/);
+  assert.match(fs.readFileSync(path.join(docsDir, "index.html"), "utf8"), /url=home\.html/);
   assert.match(index, /href="essays.html"/);
   assert.doesNotMatch(index, />Earlier</);
   assert.doesNotMatch(index, /Read the /);
