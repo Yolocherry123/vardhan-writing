@@ -1,7 +1,7 @@
 ---
-title: Life from now
+title: Life's gift
 date: 2026-11-08T17:49:00+05:30
-updated: 2026-11-08T21:08:00+05:30
+updated: 2026-11-09T01:03:00+05:30
 kind: quote
 align: center
 summary: 
