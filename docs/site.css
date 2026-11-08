@@ -428,6 +428,10 @@ a.kicker:hover {
   padding-top: 0.15em;
 }
 
+.archive.kind-essay li + li {
+  margin-top: 1.85em;
+}
+
 .archive li .prose {
   width: 100%;
   align-self: stretch;

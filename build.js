@@ -429,7 +429,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=40">
+<link rel="stylesheet" href="${prefix}site.css?v=41">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -548,7 +548,7 @@ ${preview ? homePreview(post) : ""}
 function renderKind(config, posts, kind) {
   const matching = posts.filter((post) => post.kind === kind);
   const main = matching.length
-    ? `<section class="archive" aria-label="${KIND_HEADING[kind]}">
+    ? `<section class="archive kind-${kind}" aria-label="${KIND_HEADING[kind]}">
 <h1>${KIND_HEADING[kind]}</h1>
 <ol>
 ${matching.map((post) => pieceItem(post, 0, false, kind === "quote" || kind === "essay")).join("\n")}
@@ -1013,6 +1013,7 @@ function main() {
   }
   const essays = fs.readFileSync(path.join(docsDir, "essays.html"), "utf8");
   assert.match(essays, /<h1>Essays<\/h1>/);
+  assert.match(essays, /class="archive kind-essay"/);
   assert.match(essays, /class="dek"/);
   assert.doesNotMatch(essays, />Thought</);
   const quotesBuilt = fs.readFileSync(path.join(docsDir, "quotes.html"), "utf8");
