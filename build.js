@@ -9,10 +9,10 @@ const assert = require("node:assert/strict");
 const root = __dirname;
 const writingDir = path.join(root, "writing");
 const docsDir = path.join(root, "docs");
-const KINDS = { essay: "Essay", note: "Note", quote: "Quote" };
+const KINDS = { essay: "Essay", note: "Thought", quote: "Quote" };
 const KIND_FILE = { essay: "essays.html", note: "notes.html", quote: "quotes.html" };
-const KIND_HEADING = { essay: "Essays", note: "Notes", quote: "Quotes" };
-const KIND_EMPTY = { essay: "No essays yet.", note: "No notes yet.", quote: "No quotes yet." };
+const KIND_HEADING = { essay: "Essays", note: "Thoughts", quote: "Quotes" };
+const KIND_EMPTY = { essay: "No essays yet.", note: "No thoughts yet.", quote: "No quotes yet." };
 const TYPEFACES = ["courier", "newsreader", "lora", "charter"];
 const TYPEFACE = "courier";
 
@@ -363,7 +363,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
   const fullTitle = title === config.title ? config.title : `${title} · ${config.title}`;
   const nav = [
     ["essays.html", "Essays"],
-    ["notes.html", "Notes"],
+    ["notes.html", "Thoughts"],
     ["quotes.html", "Quotes"],
     ["search.html", "Search"],
     ["about.html", "About"],
@@ -912,7 +912,7 @@ function main() {
   }
   const essays = fs.readFileSync(path.join(docsDir, "essays.html"), "utf8");
   assert.match(essays, /<h1>Essays<\/h1>/);
-  assert.doesNotMatch(essays, />Note</);
+  assert.doesNotMatch(essays, />Thought</);
   const built = fs.readFileSync(path.join(docsDir, "posts", `${posts[0].slug}.html`), "utf8");
   assert.doesNotMatch(built, /<script/i);
   assert.match(built, /href="\.\.\/edit.html"/);

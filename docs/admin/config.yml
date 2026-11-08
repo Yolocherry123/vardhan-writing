@@ -32,13 +32,13 @@ collections:
         default: note
         options:
           - { label: Essay, value: essay }
-          - { label: Note, value: note }
+          - { label: Thought, value: note }
           - { label: Quote, value: quote }
       - label: Summary
         name: summary
         widget: string
         required: false
-        hint: "Required for an essay or a note. One sentence. A quote can leave this blank."
+        hint: "Required for an essay or a thought. One sentence. A quote can leave this blank."
       - label: Attribution
         name: attribution
         widget: string
