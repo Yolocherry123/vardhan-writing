@@ -361,7 +361,7 @@ a.kicker:hover {
 
 .dek {
   margin: 0.35em auto 0;
-  max-width: 48ch;
+  max-width: 100%;
   font-size: 1em;
   line-height: 1.6;
   text-align: center;
