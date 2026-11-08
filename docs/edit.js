@@ -187,7 +187,7 @@
   function kindLabel(kind) {
     if (kind === "essay") return "Essay";
     if (kind === "quote") return "Quote";
-    return "Note";
+    return "Thought";
   }
 
   function status(message) {
@@ -198,7 +198,7 @@
   function showSignIn(message) {
     main.innerHTML = `<section class="desk-sign">
 <h1>Sign in</h1>
-<p>A token lets this page save essays, notes, quotes, and pictures to your repository. It stays in this browser.</p>
+<p>A token lets this page save essays, thoughts, quotes, and pictures to your repository. It stays in this browser.</p>
 <p>Create a fine-grained token for Yolocherry123/vardhan-writing with Contents set to read and write.</p>
 <p><a href="https://github.com/settings/personal-access-tokens/new">Create a token</a></p>
 <form id="sign-in">
@@ -272,7 +272,7 @@
     main.innerHTML = `<section>
 <div class="desk-bar">
 <button type="button" data-new="essay">New essay</button>
-<button type="button" data-new="note">New note</button>
+<button type="button" data-new="note">New thought</button>
 <button type="button" data-new="quote">New quote</button>
 <button type="button" id="site-text">Site text</button>
 <button type="button" id="sign-out">Sign out</button>
@@ -341,7 +341,7 @@ ${pieces.length ? `<ol class="desk-list">${pieces.map((piece) => `<li><button ty
 <div class="desk-fields">
 <label>Kind<select id="kind">
 <option value="essay">Essay</option>
-<option value="note">Note</option>
+<option value="note">Thought</option>
 <option value="quote">Quote</option>
 </select></label>
 <label>Date<input id="date" type="datetime-local" required></label>
