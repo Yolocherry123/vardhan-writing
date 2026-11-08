@@ -118,7 +118,7 @@ function isBlockStart(line) {
     /^\s*[-*]\s+/.test(line) ||
     /^\s*\d+\.\s+/.test(line) ||
     /^(-{3,}|\*{3,})$/.test(line.trim()) ||
-    /^\{(left|center|right)\}$/.test(line.trim()) ||
+    /^\{(left|center|right|justify)\}$/.test(line.trim()) ||
     /^!video\[[^\]]*\]\([^)\s]+\)$/.test(line.trim())
   );
 }
@@ -138,7 +138,7 @@ function renderMarkdown(markdown, depth = 0) {
       i += 1;
       continue;
     }
-    const alignMarker = /^\{(left|center|right)\}$/.exec(line.trim());
+    const alignMarker = /^\{(left|center|right|justify)\}$/.exec(line.trim());
     if (alignMarker) {
       placed = alignMarker[1];
       i += 1;
@@ -334,7 +334,7 @@ function loadPosts() {
     if (!data.title) throw new Error(`${filename}: add a title`);
     if (!KINDS[data.kind]) throw new Error(`${filename}: kind must be essay, note, or quote`);
     if (!body) throw new Error(`${filename}: the piece is empty`);
-    data.summary = (data.summary || firstSentence(body)).replace(/\{(?:left|center|right)\}/g, " ").replace(/\s+/g, " ").trim();
+    data.summary = (data.summary || firstSentence(body)).replace(/\{(?:left|center|right|justify)\}/g, " ").replace(/\s+/g, " ").trim();
     if (!data.summary) data.summary = firstSentence(body);
     return {
       title: data.title,
@@ -359,7 +359,7 @@ function loadPosts() {
 }
 
 function pieceAlign(value) {
-  return value === "left" || value === "right" ? value : "center";
+  return value === "left" || value === "right" || value === "justify" ? value : "center";
 }
 
 function pieceUpdated(value, filename) {
@@ -385,7 +385,7 @@ function plainText(body) {
   return body
     .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/\{(?:left|center|right)\}/g, " ")
+    .replace(/\{(?:left|center|right|justify)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -395,7 +395,7 @@ function firstSentence(body) {
   const plain = body
     .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/\{(?:left|center|right)\}/g, " ")
+    .replace(/\{(?:left|center|right|justify)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -429,7 +429,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=33">
+<link rel="stylesheet" href="${prefix}site.css?v=34">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -770,6 +770,10 @@ function selfCheck() {
     renderMarkdown("Before.\n\n{left}\nLeft side.\n\nAfter."),
     /<p>Before\.<\/p>\n<div class="placed align-left"><p>Left side\.<\/p><\/div>\n<p>After\.<\/p>/,
   );
+  assert.match(
+    renderMarkdown("Before.\n\n{justify}\nEven edges.\n\nAfter."),
+    /<p>Before\.<\/p>\n<div class="placed align-justify"><p>Even edges\.<\/p><\/div>\n<p>After\.<\/p>/,
+  );
   assert.equal(firstSentence("hi\n\n{left}\nlsdkfpewaoph\n\nefoeshafoh"), "hi lsdkfpewaoph efoeshafoh");
   assert.equal(firstSentence("Line.![plane](/images/plane.webp)"), "Line.");
   assert.match(renderMarkdown("### Smaller"), /<h3>Smaller<\/h3>/);
@@ -812,6 +816,21 @@ function selfCheck() {
     },
   );
   assert.match(leftPage, /class="prose align-left"/);
+  const justifiedPage = renderPost(
+    { title: "T", description: "d", author: "A", about: "b", url: "" },
+    {
+      title: "A note",
+      date: "2026-11-01",
+      kind: "note",
+      align: "justify",
+      summary: "Even",
+      attribution: "",
+      source: "",
+      slug: "a-note",
+      html: "<p>Body.</p>",
+    },
+  );
+  assert.match(justifiedPage, /class="prose align-justify"/);
   assert.match(quotePage, /— Simone Weil, <cite>Gravity and Grace<\/cite>/);
   const sampleConfig = { title: "T", description: "d", author: "A", about: "b", url: "" };
   const sampleEssay = {
@@ -998,6 +1017,7 @@ function main() {
   const editor = fs.readFileSync(path.join(docsDir, "edit.js"), "utf8");
   assert.match(editor, /data-tool="small-heading"/);
   assert.match(editor, /data-tool="code-block"/);
+  assert.match(editor, /data-tool="align-justify"/);
   assert.match(editor, /api\.github\.com/);
   assert.match(editor, /previousSha && current && current\.sha !== previousSha/);
   assert.match(editor, /method: "DELETE"/);

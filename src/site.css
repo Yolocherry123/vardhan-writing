@@ -360,13 +360,15 @@ a.kicker:hover {
 }
 
 .dek {
-  margin: 0.35em auto 0;
-  max-width: 100%;
+  margin: 0.55em auto 0;
+  max-width: 34rem;
   font-size: 1em;
   line-height: 1.6;
-  text-align: center;
+  text-align: justify;
+  text-align-last: center;
   text-indent: 0;
   text-wrap: pretty;
+  hyphens: auto;
 }
 
 .home-quote {
@@ -686,6 +688,17 @@ a.kicker:hover {
   text-align: right;
 }
 
+.prose .placed.align-justify,
+.prose .placed.align-justify p,
+.prose .placed.align-justify ul,
+.prose .placed.align-justify ol,
+.prose .placed.align-justify li,
+.prose .placed.align-justify blockquote {
+  text-align: justify;
+  text-align-last: left;
+  hyphens: auto;
+}
+
 .prose.align-left,
 .prose.align-left p,
 .prose.align-left h2,
@@ -710,6 +723,16 @@ a.kicker:hover {
 .dek.align-right,
 .attribution.align-right {
   text-align: right;
+}
+
+.prose.align-justify,
+.prose.align-justify p,
+.prose.align-justify ul,
+.prose.align-justify ol,
+.prose.align-justify blockquote {
+  text-align: justify;
+  text-align-last: left;
+  hyphens: auto;
 }
 
 .attribution {

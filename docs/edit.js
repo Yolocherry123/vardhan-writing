@@ -355,7 +355,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
     opened.path = piece.path || "";
     opened.originalDate = (piece.data && piece.data.date) || "";
     const data = piece.data || {};
-    const align = data.align === "left" || data.align === "right" ? data.align : "center";
+    const align = data.align === "left" || data.align === "right" || data.align === "justify" ? data.align : "center";
     const kind = data.kind === "essay" || data.kind === "quote" ? data.kind : "note";
     main.innerHTML = `<section>
 <p class="desk-actions"><button type="button" id="back">All pieces</button></p>
@@ -371,6 +371,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
 <option value="center">Center</option>
 <option value="left">Left</option>
 <option value="right">Right</option>
+<option value="justify">Justify</option>
 </select></label>
 </div>
 <label>Summary<input id="summary" type="text"></label>
@@ -389,6 +390,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
 <button type="button" data-tool="align-left">Left</button>
 <button type="button" data-tool="align-center">Center</button>
 <button type="button" data-tool="align-right">Right</button>
+<button type="button" data-tool="align-justify">Justify</button>
 </div>
 <div class="desk-tool-group"><span>Blocks</span>
 <button type="button" data-tool="text">Text</button>
@@ -493,7 +495,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
   }
 
   function stripBlock(line) {
-    return line.replace(/^\s*(?:\{(?:left|center|right)\}\s*|#{1,4}\s+|>\s*|[-*]\s+|\d+\.\s+)/, "");
+    return line.replace(/^\s*(?:\{(?:left|center|right|justify)\}\s*|#{1,4}\s+|>\s*|[-*]\s+|\d+\.\s+)/, "");
   }
 
   function setBlock(kind) {
@@ -539,7 +541,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
   }
 
   function isMarkerLine(line) {
-    return /^\{(left|center|right)\}$/.test(line.trim());
+    return /^\{(left|center|right|justify)\}$/.test(line.trim());
   }
 
   function lineAt(value, index) {
