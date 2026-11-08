@@ -302,6 +302,7 @@ function loadPosts() {
       align: pieceAlign(data.align),
       slug: identity.slug,
       html: renderMarkdown(body, 1),
+      homeHtml: renderMarkdown(body, 0),
     };
   });
   const orderKey = (post) => (post.instant || new Date(`${post.date}T00:00:00+05:30`)).toISOString();
@@ -349,7 +350,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main }) 
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=17">
+<link rel="stylesheet" href="${prefix}site.css?v=18">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -387,7 +388,7 @@ function renderHome(config, posts) {
   const previous = posts.filter((post) => post.date !== posts[0].date);
   const [latest, ...sameDay] = today;
   const lead = latest.kind === "note"
-    ? `<p class="dek">${inline(latest.summary)}</p>`
+    ? `<div class="prose align-${latest.align}">${latest.homeHtml}</div>`
     : homePreview(latest);
   const featured = `<article class="featured">
 ${kindLink(latest.kind, 0)}
@@ -716,6 +717,22 @@ function selfCheck() {
   const quoteHome = renderHome(sampleConfig, [sampleQuote, sampleEssay]);
   assert.match(quoteHome, /<div class="home-quote prose quote"><p>The sdkjf lsdkjflajkh<\/p><\/div>/);
   assert.match(quoteHome, /The short account\./);
+  const noteHome = renderHome(sampleConfig, [{
+    title: "Hello",
+    date: "2026-11-08",
+    when: "2026-11-08",
+    instant: null,
+    kind: "note",
+    summary: "Line.",
+    attribution: "",
+    source: "",
+    align: "center",
+    slug: "hello",
+    html: '<p><img src="../images/plane.webp" alt="plane"></p>',
+    homeHtml: '<p>Line.</p><p><img src="images/plane.webp" alt="plane"></p>',
+  }]);
+  assert.match(noteHome, /src="images\/plane.webp"/);
+  assert.doesNotMatch(noteHome, /src="\.\.\/images/);
   assert.equal(formatDate("2026-11-08"), "8 November 2026");
   assert.equal(formatDate("2026-11-07", "short"), "7 Nov 2026");
   assert.equal(formatDate("2026-11-08T03:45:06+05:30"), "8 November 2026, 3:45 am");

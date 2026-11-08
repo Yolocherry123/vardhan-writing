@@ -225,6 +225,7 @@ a:focus-visible {
   width: min(var(--measure), calc(100% - 3rem));
   margin: 0 auto;
   padding: 4.25rem 0 5rem;
+  overflow-wrap: anywhere;
 }
 
 .mast {
@@ -741,6 +742,9 @@ a.kicker:hover {
   border: 1px solid var(--rule);
   padding: 0.7em 0.6em;
   line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow-x: hidden;
 }
 
 .desk-list {
