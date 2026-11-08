@@ -1,7 +1,7 @@
 ---
-title: moon - the imperfect beauty
+title: Jaabili(Moon) - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T02:27:00+05:30
+updated: 2026-11-09T02:28:00+05:30
 kind: essay
 align: center
 summary: 
