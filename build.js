@@ -429,7 +429,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=34">
+<link rel="stylesheet" href="${prefix}site.css?v=35">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -520,7 +520,7 @@ function homePreview(post) {
     return `<div class="home-quote prose quote">${post.html}</div>${quoteCredit(post)}`;
   }
   if (post.kind === "note") {
-    return `<div class="prose align-${post.align || "center"}">${post.homeHtml || ""}</div>`;
+    return `<div class="home-note prose align-${post.align || "center"}">${post.homeHtml || ""}</div>`;
   }
   if (post.kind === "essay" && post.summary) {
     return `<p class="dek">${inline(post.summary)}</p>`;
@@ -911,7 +911,7 @@ function selfCheck() {
     html: "<p>The full older note.</p>",
     homeHtml: "<p>The full older note.</p>",
   }]);
-  assert.match(olderNoteHome, /class="prose align-left"><p>The full older note\.<\/p><\/div>/);
+  assert.match(olderNoteHome, /class="home-note prose align-left"><p>The full older note\.<\/p><\/div>/);
   assert.match(olderNoteHome, /The short account\./);
   assert.doesNotMatch(olderNoteHome, /much longer essay body/);
   const revisedAt = new Date("2026-11-08T12:31:00+05:30");
