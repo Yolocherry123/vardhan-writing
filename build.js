@@ -315,6 +315,7 @@ function pieceAlign(value) {
 
 function firstSentence(body) {
   const plain = body
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/\{(?:left|center|right)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
     .replace(/\s+/g, " ")
@@ -637,6 +638,7 @@ function selfCheck() {
     /<p>Before\.<\/p>\n<div class="placed align-left"><p>Left side\.<\/p><\/div>\n<p>After\.<\/p>/,
   );
   assert.equal(firstSentence("hi\n\n{left}\nlsdkfpewaoph\n\nefoeshafoh"), "hi lsdkfpewaoph efoeshafoh");
+  assert.equal(firstSentence("Line.![plane](/images/plane.webp)"), "Line.");
   assert.match(renderMarkdown("### Smaller"), /<h3>Smaller<\/h3>/);
   assert.match(renderMarkdown("#### Least"), /<h4>Least<\/h4>/);
   assert.match(renderMarkdown("1. one\n2. two"), /<ol><li>one<\/li><li>two<\/li><\/ol>/);
