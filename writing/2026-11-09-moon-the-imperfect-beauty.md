@@ -1,17 +1,18 @@
 ---
 title: Jaabili(Moon) - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T02:32:00+05:30
+updated: 2026-11-09T02:35:00+05:30
 kind: essay
 align: center
-summary: 
+summary: The moon has been romantisized by people from different geographies, accross time zones and for time immemorial. This is my interpreation on why it is.
 attribution: 
 source: 
 ---
 
 ![images](/images/images.jpg)
 
-***The moon is perhaps the best representation of a Manmathī.***
+{left}
+***1. The moon is perhaps the best representation of a Manmathī.***
 
 While begrudgingly trotting towards the campus gate in the intense summer heat of 2024, I eyes glanced up at the evening sky as I muttered curses underneath my breath at the bitter realisation that going to the gate also meant walking back to hostel.. taking the same drab route. 
 
