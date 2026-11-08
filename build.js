@@ -24,6 +24,10 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function safeUrl(url) {
   const trimmed = url.trim();
   if (trimmed.startsWith("//") || trimmed.includes("\\")) return false;
@@ -425,7 +429,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="${prefix}site.css?v=31">
+<link rel="stylesheet" href="${prefix}site.css?v=32">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -447,6 +451,16 @@ ${after}</body>
 `;
 }
 
+function daysOf(posts) {
+  const days = [];
+  for (const post of posts) {
+    const last = days[days.length - 1];
+    if (!last || last.date !== post.date) days.push({ date: post.date, posts: [post] });
+    else last.posts.push(post);
+  }
+  return days;
+}
+
 function renderHome(config, posts) {
   if (posts.length === 0) {
     return page({
@@ -459,9 +473,8 @@ function renderHome(config, posts) {
       main: `<p class="empty">Nothing posted yet.</p>`,
     });
   }
-  const today = posts.filter((post) => post.date === posts[0].date);
-  const previous = posts.filter((post) => post.date !== posts[0].date);
-  const [latest, ...sameDay] = today;
+  const [latestDay, ...olderDays] = daysOf(posts);
+  const [latest, ...sameDay] = latestDay.posts;
   const lead = homePreview(latest);
   const featured = `<article class="featured">
 ${kindLink(latest.kind, 0)}
@@ -477,6 +490,9 @@ ${items.map((post) => pieceItem(post, 0, true, true)).join("\n")}
 </ol>
 </section>`
       : "";
+  const older = olderDays
+    .map((day) => list(day.posts, " day", formatDate(day.posts[0].when || day.date)))
+    .join("");
   return page({
     config,
     depth: 0,
@@ -484,7 +500,7 @@ ${items.map((post) => pieceItem(post, 0, true, true)).join("\n")}
     title: config.title,
     description: config.description,
     bodyClass: "home",
-    main: featured + list(sameDay, "", "Also today") + list(previous, " previous", "Previous"),
+    main: featured + list(sameDay, "", "Also today") + older,
   });
 }
 
@@ -830,6 +846,19 @@ function selfCheck() {
   assert.match(home, /The sdkjf lsdkjflajkh/);
   assert.match(home, /— ikk, <cite>dd<\/cite>/);
   assert.match(home, /<p class="dek">The short account\.<\/p>/);
+  assert.match(home, /class="archive day"/);
+  assert.doesNotMatch(home, /class="archive previous"/);
+  const parenthetical = renderHome(sampleConfig, [{ ...sampleEssay, title: "Jaabili(Moon)" }]);
+  assert.match(parenthetical, /Jaabili\(Moon\)/);
+  assert.match(parenthetical, new RegExp(escapeRegExp("Jaabili(Moon)")));
+  const grouped = renderHome(sampleConfig, [
+    sampleEssay,
+    { ...sampleQuote, date: "2026-11-08", when: "2026-11-08", title: "Same day", slug: "same-day" },
+    sampleQuote,
+    { ...sampleQuote, date: "2026-11-06", when: "2026-11-06", title: "Older still", slug: "older-still", html: "<p>Older still.</p>" },
+  ]);
+  assert.equal((grouped.match(/class="archive day"/g) || []).length, 2);
+  assert.ok(grouped.indexOf("Same day") < grouped.indexOf('class="archive day"'));
   const quoteHome = renderHome(sampleConfig, [sampleQuote, sampleEssay]);
   assert.match(quoteHome, /<div class="home-quote prose quote"><p>The sdkjf lsdkjflajkh<\/p><\/div>/);
   assert.match(quoteHome, /The short account\./);
@@ -939,7 +968,7 @@ function main() {
     assert.equal(fs.readFileSync(path.join(docsDir, "CNAME"), "utf8").trim(), new URL(config.url).host);
   }
   const index = fs.readFileSync(path.join(docsDir, "home.html"), "utf8");
-  for (const post of posts) assert.match(index, new RegExp(escapeHtml(post.title)));
+  for (const post of posts) assert.match(index, new RegExp(escapeRegExp(escapeHtml(post.title))));
   assert.match(index, /href="edit.html"/);
   assert.match(index, new RegExp(`class="home font-${TYPEFACE}"`));
   assert.match(fs.readFileSync(path.join(docsDir, "index.html"), "utf8"), /url=home\.html/);
@@ -948,7 +977,7 @@ function main() {
   const search = fs.readFileSync(path.join(docsDir, "search.html"), "utf8");
   assert.match(search, /id="q"/);
   assert.match(search, /src="search\.js"/);
-  assert.match(search, new RegExp(JSON.stringify(posts[0].title).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(search, new RegExp(escapeRegExp(JSON.stringify(posts[0].title))));
   assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /href="search\.html"/);
   const opened = posts.find((post) => post.kind === "note" || post.kind === "essay");
   if (opened && opened.updated && formatDate(opened.updated.toISOString()) !== formatDate(opened.when || opened.date)) {

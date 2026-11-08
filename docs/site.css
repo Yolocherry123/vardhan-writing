@@ -388,7 +388,7 @@ a.kicker:hover {
   text-align: center;
 }
 
-.archive.previous {
+.archive.day {
   margin-top: 1.8em;
   padding-top: 2.1em;
   border-top: 1px solid var(--rule);
