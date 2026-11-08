@@ -459,9 +459,12 @@ a.kicker:hover {
 
 .prose img {
   display: block;
-  max-width: 100%;
+  width: auto;
   height: auto;
+  max-width: min(100%, 16rem);
+  max-height: 12rem;
   margin: 0.75em auto;
+  object-fit: contain;
 }
 
 .prose h2,
