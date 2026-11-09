@@ -1,10 +1,10 @@
 ---
 title: Jaabili(Moon) - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T13:54:00+05:30
+updated: 2026-11-09T15:55:00+05:30
 kind: essay
 align: center
-summary: The moon has been a romantic's embodiment of a Manmathī love
+summary: The moon has been a romantic's embodiment of a Manmathī's love
 attribution: 
 source: 
 ---
