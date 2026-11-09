@@ -119,7 +119,7 @@ function isBlockStart(line) {
     /^\s*[-*]\s+/.test(line) ||
     /^\s*\d+\.\s+/.test(line) ||
     /^(-{3,}|\*{3,})$/.test(line.trim()) ||
-    /^\{(left|center|right|justify)\}$/.test(line.trim()) ||
+    /^\{(left|center|right|justify|ragged)\}$/.test(line.trim()) ||
     /^!video\[[^\]]*\]\([^)\s]+\)$/.test(line.trim())
   );
 }
@@ -128,7 +128,16 @@ function renderMarkdown(markdown, depth = 0) {
   const lines = markdown.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
   const blocks = [];
   let placed = "";
+  let pendingBlanks = 0;
+  let started = false;
   const emit = (html) => {
+    if (started && pendingBlanks > 1) {
+      for (let n = 1; n < pendingBlanks; n += 1) {
+        blocks.push(`<div class="blank" aria-hidden="true"></div>`);
+      }
+    }
+    pendingBlanks = 0;
+    started = true;
     blocks.push(placed ? `<div class="placed align-${placed}">${html}</div>` : html);
     placed = "";
   };
@@ -136,10 +145,11 @@ function renderMarkdown(markdown, depth = 0) {
   while (i < lines.length) {
     const line = lines[i];
     if (line.trim() === "") {
+      pendingBlanks += 1;
       i += 1;
       continue;
     }
-    const alignMarker = /^\{(left|center|right|justify)\}$/.exec(line.trim());
+    const alignMarker = /^\{(left|center|right|justify|ragged)\}$/.exec(line.trim());
     if (alignMarker) {
       placed = alignMarker[1];
       i += 1;
@@ -335,7 +345,7 @@ function loadPosts() {
     if (!data.title) throw new Error(`${filename}: add a title`);
     if (!KINDS[data.kind]) throw new Error(`${filename}: kind must be essay, note, or quote`);
     if (!body) throw new Error(`${filename}: the piece is empty`);
-    data.summary = (data.summary || firstSentence(body)).replace(/\{(?:left|center|right|justify)\}/g, " ").replace(/\s+/g, " ").trim();
+    data.summary = (data.summary || firstSentence(body)).replace(/\{(?:left|center|right|justify|ragged)\}/g, " ").replace(/\s+/g, " ").trim();
     if (!data.summary) data.summary = firstSentence(body);
     return {
       title: data.title,
@@ -360,7 +370,7 @@ function loadPosts() {
 }
 
 function pieceAlign(value) {
-  return value === "left" || value === "right" || value === "justify" ? value : "center";
+  return value === "left" || value === "right" || value === "justify" || value === "ragged" ? value : "center";
 }
 
 function pieceUpdated(value, filename) {
@@ -386,7 +396,7 @@ function plainText(body) {
   return body
     .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/\{(?:left|center|right|justify)\}/g, " ")
+    .replace(/\{(?:left|center|right|justify|ragged)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -396,7 +406,7 @@ function firstSentence(body) {
   const plain = body
     .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/\{(?:left|center|right|justify)\}/g, " ")
+    .replace(/\{(?:left|center|right|justify|ragged)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -435,7 +445,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <link rel="manifest" href="${prefix}manifest.webmanifest">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${prefix}icon-192.png">
-<link rel="stylesheet" href="${prefix}site.css?v=44">
+<link rel="stylesheet" href="${prefix}site.css?v=46">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -886,6 +896,15 @@ function selfCheck() {
     renderMarkdown("Before.\n\n{justify}\nEven edges.\n\nAfter."),
     /<p>Before\.<\/p>\n<div class="placed align-justify"><p>Even edges\.<\/p><\/div>\n<p>After\.<\/p>/,
   );
+  assert.doesNotMatch(renderMarkdown("One.\n\nTwo."), /class="blank"/);
+  assert.match(
+    renderMarkdown("One.\n\n\n\nTwo."),
+    /<p>One\.<\/p>\n<div class="blank" aria-hidden="true"><\/div>\n<div class="blank" aria-hidden="true"><\/div>\n<p>Two\.<\/p>/,
+  );
+  assert.match(
+    renderMarkdown("End.\n\n\n\n{center}\n*Hit me.*\n\n\n> **The moon**\n\n{center}\nAfter."),
+    /<p>End\.<\/p>\n<div class="blank" aria-hidden="true"><\/div>\n<div class="blank" aria-hidden="true"><\/div>\n<div class="placed align-center"><p><em>Hit me\.<\/em><\/p><\/div>\n<div class="blank" aria-hidden="true"><\/div>\n<blockquote><p><strong>The moon<\/strong><\/p><\/blockquote>\n<div class="placed align-center"><p>After\.<\/p><\/div>/,
+  );
   assert.equal(firstSentence("hi\n\n{left}\nlsdkfpewaoph\n\nefoeshafoh"), "hi lsdkfpewaoph efoeshafoh");
   assert.equal(firstSentence("Line.![plane](/images/plane.webp)"), "Line.");
   assert.match(renderMarkdown("### Smaller"), /<h3>Smaller<\/h3>/);
@@ -943,6 +962,26 @@ function selfCheck() {
     },
   );
   assert.match(justifiedPage, /class="prose align-justify"/);
+  const raggedPage = renderPost(
+    { title: "T", description: "d", author: "A", about: "b", url: "" },
+    {
+      title: "A note",
+      date: "2026-11-01",
+      kind: "note",
+      align: "ragged",
+      summary: "Ragged",
+      attribution: "",
+      source: "",
+      slug: "a-note",
+      html: "<p>Body.</p>",
+    },
+  );
+  assert.match(raggedPage, /class="prose align-ragged"/);
+  assert.match(
+    renderMarkdown("Before.\n\n{ragged}\nThe block sits in the middle.\n\nAfter."),
+    /<p>Before\.<\/p>\n<div class="placed align-ragged"><p>The block sits in the middle\.<\/p><\/div>\n<p>After\.<\/p>/,
+  );
+  assert.equal(firstSentence("hi\n\n{ragged}\nmore words"), "hi more words");
   assert.match(quotePage, /— Simone Weil, <cite>Gravity and Grace<\/cite>/);
   const sampleConfig = { title: "T", description: "d", author: "A", about: "b", url: "" };
   const sampleEssay = {
@@ -1145,6 +1184,7 @@ function main() {
   assert.match(editor, /data-tool="small-heading"/);
   assert.match(editor, /data-tool="code-block"/);
   assert.match(editor, /data-tool="align-justify"/);
+  assert.match(editor, /data-tool="align-ragged"/);
   assert.match(editor, /api\.github\.com/);
   assert.match(editor, /previousSha && current && current\.sha !== previousSha/);
   assert.match(editor, /method: "DELETE"/);

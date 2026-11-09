@@ -165,8 +165,8 @@ body.font-charter {
 html {
   font-size: 100%;
   text-rendering: optimizeLegibility;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 body {
@@ -228,8 +228,8 @@ a:focus-visible {
 .sheet * {
   max-width: 100%;
   min-width: 0;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .sheet {
@@ -511,8 +511,12 @@ a.kicker:hover {
   text-indent: 0;
   text-align: center;
   text-wrap: wrap;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.prose .blank {
+  height: 1.05em;
 }
 
 .prose img {
@@ -610,16 +614,20 @@ a.kicker:hover {
 
 .prose blockquote {
   margin: 1em auto;
-  max-width: 40ch;
+  max-width: 62ch;
   padding: 0;
   border: 0;
   font-size: 1.05em;
   font-weight: 400;
   font-style: italic;
   line-height: 1.5;
+  text-wrap: balance;
 }
 
-.prose blockquote p { text-indent: 0; }
+.prose blockquote p {
+  text-indent: 0;
+  text-wrap: balance;
+}
 
 .prose ul,
 .prose ol {
@@ -690,8 +698,11 @@ a.kicker:hover {
 .prose .placed.align-left ul,
 .prose .placed.align-left ol,
 .prose .placed.align-left li,
-.prose .placed.align-left blockquote {
+.prose .placed.align-left blockquote,
+.prose .placed.align-left pre {
   text-align: left;
+  text-align-last: left;
+  hyphens: manual;
 }
 
 .prose .placed.align-center,
@@ -702,8 +713,11 @@ a.kicker:hover {
 .prose .placed.align-center ul,
 .prose .placed.align-center ol,
 .prose .placed.align-center li,
-.prose .placed.align-center blockquote {
+.prose .placed.align-center blockquote,
+.prose .placed.align-center pre {
   text-align: center;
+  text-align-last: center;
+  hyphens: manual;
 }
 
 .prose .placed.align-right,
@@ -714,8 +728,11 @@ a.kicker:hover {
 .prose .placed.align-right ul,
 .prose .placed.align-right ol,
 .prose .placed.align-right li,
-.prose .placed.align-right blockquote {
+.prose .placed.align-right blockquote,
+.prose .placed.align-right pre {
   text-align: right;
+  text-align-last: right;
+  hyphens: manual;
 }
 
 .prose .placed.align-justify,
@@ -723,10 +740,33 @@ a.kicker:hover {
 .prose .placed.align-justify ul,
 .prose .placed.align-justify ol,
 .prose .placed.align-justify li,
-.prose .placed.align-justify blockquote {
+.prose .placed.align-justify blockquote,
+.prose .placed.align-justify pre {
   text-align: justify;
   text-align-last: left;
   hyphens: auto;
+}
+
+.prose .placed.align-ragged {
+  width: min(100%, 32rem);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.prose .placed.align-ragged,
+.prose .placed.align-ragged p,
+.prose .placed.align-ragged h2,
+.prose .placed.align-ragged h3,
+.prose .placed.align-ragged h4,
+.prose .placed.align-ragged ul,
+.prose .placed.align-ragged ol,
+.prose .placed.align-ragged li,
+.prose .placed.align-ragged blockquote,
+.prose .placed.align-ragged pre {
+  text-align: left;
+  text-align-last: left;
+  hyphens: manual;
+  text-wrap: pretty;
 }
 
 .prose.align-left,
@@ -763,6 +803,48 @@ a.kicker:hover {
   text-align: justify;
   text-align-last: left;
   hyphens: auto;
+}
+
+.prose.align-ragged > p,
+.prose.align-ragged > ul,
+.prose.align-ragged > ol,
+.prose.align-ragged > pre {
+  width: min(100%, 32rem);
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+  text-align-last: left;
+  hyphens: manual;
+  text-wrap: pretty;
+}
+
+.prose.align-ragged > p:has(img),
+.prose.align-ragged > p:has(video),
+.prose.align-ragged > p:has(iframe) {
+  width: auto;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  text-align: center;
+  text-align-last: center;
+}
+
+.prose blockquote,
+.prose blockquote p,
+.prose.align-left blockquote,
+.prose.align-left blockquote p,
+.prose.align-right blockquote,
+.prose.align-right blockquote p,
+.prose.align-justify blockquote,
+.prose.align-justify blockquote p,
+.home-note.prose blockquote,
+.home-note.prose blockquote p {
+  text-align: center;
+  text-align-last: center;
+  hyphens: manual;
+  word-break: normal;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 
 .home-note {
@@ -950,6 +1032,13 @@ a.kicker:hover {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   overflow-x: hidden;
+}
+
+.desk textarea.align-ragged {
+  width: min(100%, 32rem);
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
 }
 
 .desk-list {

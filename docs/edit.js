@@ -355,7 +355,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
     opened.path = piece.path || "";
     opened.originalDate = (piece.data && piece.data.date) || "";
     const data = piece.data || {};
-    const align = data.align === "left" || data.align === "right" || data.align === "justify" ? data.align : "center";
+    const align = data.align === "left" || data.align === "right" || data.align === "justify" || data.align === "ragged" ? data.align : "center";
     const kind = data.kind === "essay" || data.kind === "quote" ? data.kind : "note";
     main.innerHTML = `<section>
 <p class="desk-actions"><button type="button" id="back">All pieces</button></p>
@@ -369,6 +369,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
 <label>Date<input id="date" type="datetime-local" required></label>
 <label>Alignment<select id="align">
 <option value="center">Center</option>
+<option value="ragged">Ragged center</option>
 <option value="left">Left</option>
 <option value="right">Right</option>
 <option value="justify">Justify</option>
@@ -389,6 +390,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
 <div class="desk-tool-group"><span>Align</span>
 <button type="button" data-tool="align-left">Left</button>
 <button type="button" data-tool="align-center">Center</button>
+<button type="button" data-tool="align-ragged">Ragged center</button>
 <button type="button" data-tool="align-right">Right</button>
 <button type="button" data-tool="align-justify">Justify</button>
 </div>
@@ -423,7 +425,12 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
     document.getElementById("body").value = piece.body || "";
     const quoteFields = document.getElementById("quote-fields");
     const syncKind = () => { quoteFields.hidden = document.getElementById("kind").value !== "quote"; };
-    const syncAlign = () => { document.getElementById("body").style.textAlign = document.getElementById("align").value; };
+    const syncAlign = () => {
+      const body = document.getElementById("body");
+      const value = document.getElementById("align").value;
+      body.classList.toggle("align-ragged", value === "ragged");
+      body.style.textAlign = value === "ragged" ? "left" : value;
+    };
     syncKind();
     syncAlign();
     document.getElementById("kind").addEventListener("change", syncKind);
@@ -495,7 +502,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
   }
 
   function stripBlock(line) {
-    return line.replace(/^\s*(?:\{(?:left|center|right|justify)\}\s*|#{1,4}\s+|>\s*|[-*]\s+|\d+\.\s+)/, "");
+    return line.replace(/^\s*(?:\{(?:left|center|right|justify|ragged)\}\s*|#{1,4}\s+|>\s*|[-*]\s+|\d+\.\s+)/, "");
   }
 
   function setBlock(kind) {
@@ -541,7 +548,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
   }
 
   function isMarkerLine(line) {
-    return /^\{(left|center|right|justify)\}$/.test(line.trim());
+    return /^\{(left|center|right|justify|ragged)\}$/.test(line.trim());
   }
 
   function lineAt(value, index) {

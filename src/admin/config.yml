@@ -55,8 +55,10 @@ collections:
         default: center
         options:
           - { label: Center, value: center }
+          - { label: Ragged center, value: ragged }
           - { label: Left, value: left }
           - { label: Right, value: right }
+          - { label: Justify, value: justify }
         hint: "How the body text sits on the page."
       - label: Body
         name: body
