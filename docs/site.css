@@ -369,7 +369,7 @@ a.kicker:hover {
   text-align-last: center;
   text-indent: 0;
   text-wrap: pretty;
-  hyphens: auto;
+  hyphens: manual;
 }
 
 .home-quote {
@@ -531,6 +531,24 @@ a.kicker:hover {
   max-width: min(100%, 16rem);
   max-height: 12rem;
   object-fit: contain;
+}
+
+.tagline img,
+.tagline video,
+.tagline iframe,
+.home .tagline img {
+  display: block;
+  width: auto;
+  max-width: min(100%, 32rem);
+  max-height: none;
+  height: auto;
+  margin: 0.75em auto;
+  object-fit: contain;
+}
+
+.tagline .video {
+  margin: 0.75em auto;
+  max-width: min(100%, 32rem);
 }
 
 .prose .video {
@@ -818,6 +836,19 @@ a.kicker:hover {
   text-wrap: pretty;
 }
 
+.prose.align-ragged > blockquote {
+  width: min(100%, 32rem);
+  max-width: min(100%, 32rem);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.prose.align-ragged > blockquote,
+.prose.align-ragged > blockquote p {
+  text-align: center;
+  text-align-last: center;
+}
+
 .prose.align-ragged > p:has(img),
 .prose.align-ragged > p:has(video),
 .prose.align-ragged > p:has(iframe) {
@@ -1023,18 +1054,24 @@ a.kicker:hover {
   padding: 0.35em 0;
 }
 
+.desk textarea.compact {
+  min-height: 6em;
+}
+
 .desk textarea {
+  display: block;
   min-height: 16em;
   resize: vertical;
   border: 1px solid var(--rule);
   padding: 0.7em 0.6em;
   line-height: 1.45;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   overflow-x: hidden;
 }
 
 .desk textarea.align-ragged {
+  display: block;
   width: min(100%, 32rem);
   margin-left: auto;
   margin-right: auto;

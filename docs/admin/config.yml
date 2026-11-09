@@ -72,12 +72,15 @@ collections:
         format: json
         fields:
           - { label: Site name, name: title, widget: string }
-          - { label: Tagline, name: description, widget: string }
+          - label: Tagline
+            name: description
+            widget: markdown
+            hint: "Shown under the site name. Marks, pictures, and videos work here."
           - { label: Author, name: author, widget: string }
           - label: About
             name: about
             widget: markdown
-            hint: "Shown on the About page."
+            hint: "Shown on the About page. Marks, alignment, pictures, and videos work here."
           - label: Public URL
             name: url
             widget: string

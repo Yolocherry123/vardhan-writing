@@ -380,37 +380,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
 <label>Attribution<input id="attribution" type="text"></label>
 <label>Source<input id="source" type="text"></label>
 </div>
-<div class="desk-toolbar" aria-label="Writing tools">
-<div class="desk-tool-group"><span>Marks</span>
-<button type="button" data-tool="bold">Bold</button>
-<button type="button" data-tool="italic">Italic</button>
-<button type="button" data-tool="code">Code</button>
-<button type="button" data-tool="link">Link</button>
-</div>
-<div class="desk-tool-group"><span>Align</span>
-<button type="button" data-tool="align-left">Left</button>
-<button type="button" data-tool="align-center">Center</button>
-<button type="button" data-tool="align-ragged">Ragged center</button>
-<button type="button" data-tool="align-right">Right</button>
-<button type="button" data-tool="align-justify">Justify</button>
-</div>
-<div class="desk-tool-group"><span>Blocks</span>
-<button type="button" data-tool="text">Text</button>
-<button type="button" data-tool="heading">Heading</button>
-<button type="button" data-tool="subheading">Subheading</button>
-<button type="button" data-tool="small-heading">Small heading</button>
-<button type="button" data-tool="bullet">Bullet list</button>
-<button type="button" data-tool="number">Numbered list</button>
-<button type="button" data-tool="quote">Quote</button>
-<button type="button" data-tool="code-block">Code block</button>
-<button type="button" data-tool="rule">Divider</button>
-<button type="button" id="picture">Picture</button>
-<button type="button" id="video">Video</button>
-<button type="button" id="youtube">YouTube</button>
-</div>
-<input id="picture-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
-<input id="video-file" type="file" accept="video/mp4,video/webm,.mp4,.webm" hidden>
-</div>
+${writingTools()}
 <textarea id="body" spellcheck="true" aria-label="Body"></textarea>
 <div class="desk-actions"><button type="button" id="save">Save</button><button type="button" id="delete">Delete</button></div>
 <p id="status" class="desk-status"></p>
@@ -441,22 +411,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
       if (current !== opened.snapshot && !window.confirm("Leave without saving?")) return;
       showList();
     });
-    main.querySelectorAll("[data-tool]").forEach((button) => {
-      button.addEventListener("click", () => applyTool(button.getAttribute("data-tool")));
-    });
-    document.getElementById("picture").addEventListener("click", () => document.getElementById("picture-file").click());
-    document.getElementById("picture-file").addEventListener("change", (event) => {
-      const file = event.target.files && event.target.files[0];
-      event.target.value = "";
-      if (file) uploadPicture(file);
-    });
-    document.getElementById("video").addEventListener("click", () => document.getElementById("video-file").click());
-    document.getElementById("video-file").addEventListener("change", (event) => {
-      const file = event.target.files && event.target.files[0];
-      event.target.value = "";
-      if (file) uploadVideo(file);
-    });
-    document.getElementById("youtube").addEventListener("click", addYouTube);
+    bindWritingTools(document.getElementById("body"));
     document.getElementById("save").addEventListener("click", () => savePiece(piece));
     const remove = document.getElementById("delete");
     if (!piece.path) remove.hidden = true;
@@ -477,8 +432,77 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
     };
   }
 
+  let writingTarget = null;
+
+  function writingTools() {
+    return `<div class="desk-toolbar" aria-label="Writing tools">
+<div class="desk-tool-group"><span>Marks</span>
+<button type="button" data-tool="bold">Bold</button>
+<button type="button" data-tool="italic">Italic</button>
+<button type="button" data-tool="code">Code</button>
+<button type="button" data-tool="link">Link</button>
+</div>
+<div class="desk-tool-group"><span>Align</span>
+<button type="button" data-tool="align-left">Left</button>
+<button type="button" data-tool="align-center">Center</button>
+<button type="button" data-tool="align-ragged">Ragged center</button>
+<button type="button" data-tool="align-right">Right</button>
+<button type="button" data-tool="align-justify">Justify</button>
+</div>
+<div class="desk-tool-group"><span>Blocks</span>
+<button type="button" data-tool="text">Text</button>
+<button type="button" data-tool="heading">Heading</button>
+<button type="button" data-tool="subheading">Subheading</button>
+<button type="button" data-tool="small-heading">Small heading</button>
+<button type="button" data-tool="bullet">Bullet list</button>
+<button type="button" data-tool="number">Numbered list</button>
+<button type="button" data-tool="quote">Quote</button>
+<button type="button" data-tool="code-block">Code block</button>
+<button type="button" data-tool="rule">Divider</button>
+<button type="button" id="picture">Picture</button>
+<button type="button" id="video">Video</button>
+<button type="button" id="youtube">YouTube</button>
+</div>
+<input id="picture-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden>
+<input id="video-file" type="file" accept="video/mp4,video/webm,.mp4,.webm" hidden>
+</div>`;
+  }
+
   function bodyField() {
-    return document.getElementById("body");
+    if (writingTarget && writingTarget.isConnected) return writingTarget;
+    return document.getElementById("body") || document.getElementById("site-about") || document.getElementById("site-description");
+  }
+
+  function bindWritingTools(field) {
+    writingTarget = field;
+    for (const id of ["body", "site-description", "site-about"]) {
+      const box = document.getElementById(id);
+      if (!box) continue;
+      const remember = () => { writingTarget = box; };
+      box.addEventListener("focus", remember);
+      box.addEventListener("click", remember);
+    }
+    main.querySelectorAll("[data-tool]").forEach((button) => {
+      button.addEventListener("mousedown", (event) => event.preventDefault());
+      button.addEventListener("click", () => applyTool(button.getAttribute("data-tool")));
+    });
+    document.getElementById("picture").addEventListener("click", () => document.getElementById("picture-file").click());
+    document.getElementById("picture-file").addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      event.target.value = "";
+      if (file) uploadPicture(file);
+    });
+    document.getElementById("video").addEventListener("click", () => document.getElementById("video-file").click());
+    document.getElementById("video-file").addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      event.target.value = "";
+      if (file) uploadVideo(file);
+    });
+    document.getElementById("youtube").addEventListener("click", addYouTube);
+  }
+
+  function publishHint() {
+    return document.getElementById("site-about") ? "Save to publish it." : "Save the piece to publish it.";
   }
 
   function wrapSelection(before, after) {
@@ -620,7 +644,8 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
     const { el, start, end } = blockAtCursor();
     const lines = el.value.slice(start, end).split("\n");
     const content = (isMarkerLine(lines[0] || "") ? lines.slice(1) : lines).join("\n").replace(/^\n/, "");
-    const fallback = document.getElementById("align").value;
+    const alignSelect = document.getElementById("align");
+    const fallback = alignSelect ? alignSelect.value : "center";
     const next = direction === fallback ? content : (content.trim() ? `{${direction}}\n${content}` : `{${direction}}`);
     el.setRangeText(next, start, end, "end");
     el.focus();
@@ -673,7 +698,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
       return;
     }
     insertMedia(`!video[](https://www.youtube.com/watch?v=${id})`);
-    status("YouTube video added. Save the piece to publish it.");
+    status(`YouTube video added. ${publishHint()}`);
   }
 
   async function uploadVideo(file) {
@@ -698,7 +723,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
       const bytes = new Uint8Array(await file.arrayBuffer());
       await writeFile(`writing/images/${name}`, { base64: bytesToBase64(bytes) }, `Add video ${name}`, "");
       insertMedia(`!video[](/images/${name})`);
-      status("Video added. Save the piece to publish it.");
+      status(`Video added. ${publishHint()}`);
     } catch (error) {
       status(error.message);
     }
@@ -724,7 +749,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
       const alt = base.replace(/-/g, " ");
       el.setRangeText(`![${alt}](/images/${name})`, el.selectionStart, el.selectionEnd, "end");
       el.focus();
-      status("Picture added. Save the piece to publish it.");
+      status(`Picture added. ${publishHint()}`);
     } catch (error) {
       status(error.message);
     }
@@ -822,9 +847,10 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
       main.innerHTML = `<section>
 <p class="desk-actions"><button type="button" id="back">All pieces</button></p>
 <label>Site name<input id="site-title" class="title-field" type="text"></label>
-<label>Tagline<textarea id="site-description" rows="3"></textarea></label>
 <label>Author<input id="site-author" type="text"></label>
-<label>About<textarea id="site-about" rows="6"></textarea></label>
+${writingTools()}
+<label>Tagline<textarea id="site-description" class="compact" rows="3" spellcheck="true"></textarea></label>
+<label>About<textarea id="site-about" rows="12" spellcheck="true"></textarea></label>
 <div class="desk-actions"><button type="button" id="save">Save</button></div>
 <p id="status" class="desk-status"></p>
 </section>`;
@@ -832,6 +858,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
       document.getElementById("site-description").value = config.description || "";
       document.getElementById("site-author").value = config.author || "";
       document.getElementById("site-about").value = config.about || "";
+      bindWritingTools(document.getElementById("site-about"));
       document.getElementById("back").addEventListener("click", showList);
       document.getElementById("save").addEventListener("click", async () => {
         const next = {

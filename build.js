@@ -416,6 +416,17 @@ function firstSentence(body) {
   return `${(space > 80 ? cut.slice(0, space) : cut).trim()}…`;
 }
 
+function taglineHasBlocks(value) {
+  return /\n|!video\[|^\s*\{(?:left|center|right|justify|ragged)\}\s*$|^\s*#{1,4}\s|^\s*>|^\s*[-*]\s|^\s*\d+\.\s|^\s*```|^\s*-{3,}\s*$/m.test(value);
+}
+
+function renderTagline(value) {
+  const text = String(value || "");
+  if (!text.trim()) return "";
+  if (taglineHasBlocks(text)) return `<div class="tagline prose">${renderMarkdown(text, 0)}</div>`;
+  return `<p class="tagline">${inline(text, 0)}</p>`;
+}
+
 function page({ config, depth, pathname, title, description, bodyClass, main, after = "" }) {
   const prefix = depth === 0 ? "" : "../".repeat(depth);
   const fullTitle = title === config.title ? config.title : `${title} · ${config.title}`;
@@ -445,7 +456,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <link rel="manifest" href="${prefix}manifest.webmanifest">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${prefix}icon-192.png">
-<link rel="stylesheet" href="${prefix}site.css?v=46">
+<link rel="stylesheet" href="${prefix}site.css?v=48">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -456,7 +467,7 @@ ${canonical}
 <a class="wordmark" href="${prefix}home.html">${escapeHtml(config.title)}</a>
 <nav aria-label="Site">${nav}</nav>
 </div>
-${bodyClass === "home" ? `<p class="tagline">${escapeHtml(config.description)}</p>` : ""}
+${bodyClass === "home" ? renderTagline(config.description) : ""}
 </header>
 <main id="content">
 ${main}
@@ -484,7 +495,7 @@ function renderHome(config, posts) {
       depth: 0,
       pathname: "home.html",
       title: config.title,
-      description: config.description,
+      description: plainText(config.description),
       bodyClass: "home",
       main: `<p class="empty">Nothing posted yet.</p>`,
     });
@@ -514,7 +525,7 @@ ${items.map((post) => pieceItem(post, 0, true, true)).join("\n")}
     depth: 0,
     pathname: "home.html",
     title: config.title,
-    description: config.description,
+    description: plainText(config.description),
     bodyClass: "home",
     main: featured + list(sameDay, "", "Also today") + older,
   });
@@ -641,11 +652,11 @@ function renderAbout(config) {
     depth: 0,
     pathname: "about.html",
     title: "About",
-    description: config.about.replace(/\s+/g, " ").trim(),
+    description: plainText(config.about),
     bodyClass: "page",
     main: `<article class="post">
 <h1>About</h1>
-<div class="prose">
+<div class="prose align-center">
 ${renderMarkdown(config.about)}
 </div>
 </article>`,
@@ -769,7 +780,7 @@ function webManifest(config) {
   return `${JSON.stringify({
     name: config.title,
     short_name: config.title,
-    description: config.description,
+    description: plainText(config.description),
     id: "./",
     start_url: "home.html",
     scope: "./",
@@ -868,7 +879,7 @@ function writeFeed(config, posts) {
 <channel>
 <title>${escapeHtml(config.title)}</title>
 <link>${escapeHtml(config.url ? `${config.url}/home.html` : "home.html")}</link>
-<description>${escapeHtml(config.description)}</description>
+<description>${escapeHtml(plainText(config.description))}</description>
 ${items}
 </channel>
 </rss>
@@ -932,6 +943,51 @@ function selfCheck() {
     },
   );
   assert.match(quotePage, /class="prose quote align-center"/);
+  const aboutPage = renderAbout({
+    title: "T",
+    description: "A *short* line.",
+    author: "A",
+    about: "Hello **there**.\n\n![scan](/images/scan.png)\n\n!video[](https://www.youtube.com/watch?v=abcdefghijk)\n\n{left}\nLeft line.",
+    url: "",
+  });
+  assert.match(aboutPage, /class="prose align-center"/);
+  assert.match(aboutPage, /<strong>there<\/strong>/);
+  assert.match(aboutPage, /src="images\/scan.png"/);
+  assert.match(aboutPage, /youtube-nocookie.com\/embed\/abcdefghijk/);
+  assert.match(aboutPage, /class="placed align-left"/);
+  assert.match(aboutPage, /name="description" content="Hello there\./);
+  assert.doesNotMatch(aboutPage, /class="tagline"/);
+  const markedHome = page({
+    config: { title: "T", description: "A *short* line.", author: "A", about: "b", url: "" },
+    depth: 0,
+    pathname: "home.html",
+    title: "T",
+    description: "A short line.",
+    bodyClass: "home",
+    main: "",
+  });
+  assert.match(markedHome, /<p class="tagline">A <em>short<\/em> line\.<\/p>/);
+  const videoHome = page({
+    config: { title: "T", description: "!video[](https://www.youtube.com/watch?v=abcdefghijk)", author: "A", about: "b", url: "" },
+    depth: 0,
+    pathname: "home.html",
+    title: "T",
+    description: "Video",
+    bodyClass: "home",
+    main: "",
+  });
+  assert.match(videoHome, /<div class="tagline prose">/);
+  assert.match(videoHome, /youtube-nocookie.com\/embed\/abcdefghijk/);
+  const plainHome = page({
+    config: { title: "T", description: "Life is short.", author: "A", about: "b", url: "" },
+    depth: 0,
+    pathname: "home.html",
+    title: "T",
+    description: "Life is short.",
+    bodyClass: "home",
+    main: "",
+  });
+  assert.match(plainHome, /<p class="tagline">Life is short\.<\/p>/);
   const leftPage = renderPost(
     { title: "T", description: "d", author: "A", about: "b", url: "" },
     {
@@ -1192,6 +1248,9 @@ function main() {
   assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /src="edit\.js\?v=/);
   assert.match(editor, /id="video"/);
   assert.match(editor, /id="youtube"/);
+  assert.match(editor, /function writingTools/);
+  assert.match(editor, /bindWritingTools\(document.getElementById\("site-about"\)\)/);
+  assert.match(editor, /id="site-description"/);
   const desk = fs.readFileSync(path.join(docsDir, "admin", "config.yml"), "utf8");
   assert.match(desk, /name: github/);
   console.log(`built ${posts.length} ${posts.length === 1 ? "piece" : "pieces"}`);
