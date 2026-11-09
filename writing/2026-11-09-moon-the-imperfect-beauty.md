@@ -1,10 +1,10 @@
 ---
 title: Jaabili(Moon) - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T13:05:00+05:30
+updated: 2026-11-09T13:54:00+05:30
 kind: essay
 align: center
-summary: The moon has been romantisized by people from different geographies, accross time zones and for time immemorial. Let's explore my interpreation of why it is.
+summary: The moon has been a romantic's embodiment of a Manmathī love
 attribution: 
 source: 
 ---
