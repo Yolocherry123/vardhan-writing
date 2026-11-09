@@ -551,6 +551,46 @@ a.kicker:hover {
   max-width: min(100%, 32rem);
 }
 
+.prose img.size-small,
+.tagline img.size-small,
+.home .prose img.size-small,
+.home .tagline img.size-small {
+  max-width: min(100%, 14rem);
+  max-height: 14rem;
+}
+
+.prose img.size-medium,
+.tagline img.size-medium,
+.home .prose img.size-medium,
+.home .tagline img.size-medium {
+  max-width: min(100%, 24rem);
+  max-height: 28rem;
+}
+
+.prose img.size-large,
+.tagline img.size-large,
+.home .prose img.size-large,
+.home .tagline img.size-large {
+  max-width: min(100%, 36rem);
+  max-height: 42rem;
+}
+
+.prose img.place-left,
+.tagline img.place-left,
+.home .prose img.place-left,
+.home .tagline img.place-left {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.prose img.place-right,
+.tagline img.place-right,
+.home .prose img.place-right,
+.home .tagline img.place-right {
+  margin-left: auto;
+  margin-right: 0;
+}
+
 .prose .video {
   margin: 0.75em auto;
   max-width: 100%;
@@ -1010,6 +1050,25 @@ a.kicker:hover {
   font-size: 0.85em;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.desk-toolbar .picture-size,
+.desk-toolbar .picture-place {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  margin: 0;
+  gap: 0.45em;
+}
+
+.desk-toolbar .picture-size select,
+.desk-toolbar .picture-place select {
+  width: auto;
+  min-width: 7.5em;
+  border: 1px solid var(--ink);
+  padding: 0.35em 0.45em;
 }
 
 .desk-fields label {

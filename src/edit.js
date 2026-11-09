@@ -460,6 +460,17 @@ ${writingTools()}
 <button type="button" data-tool="code-block">Code block</button>
 <button type="button" data-tool="rule">Divider</button>
 <button type="button" id="picture">Picture</button>
+<label class="picture-size">Size<select id="picture-size" aria-label="Picture size">
+<option value="">Default</option>
+<option value="small">Small</option>
+<option value="medium">Medium</option>
+<option value="large">Large</option>
+</select></label>
+<label class="picture-place">Place<select id="picture-place" aria-label="Picture place">
+<option value="">Center</option>
+<option value="left">Left</option>
+<option value="right">Right</option>
+</select></label>
 <button type="button" id="video">Video</button>
 <button type="button" id="youtube">YouTube</button>
 </div>
@@ -487,6 +498,15 @@ ${writingTools()}
       button.addEventListener("click", () => applyTool(button.getAttribute("data-tool")));
     });
     document.getElementById("picture").addEventListener("click", () => document.getElementById("picture-file").click());
+    document.getElementById("picture-size").addEventListener("change", applyPictureOptions);
+    document.getElementById("picture-place").addEventListener("change", applyPictureOptions);
+    for (const id of ["body", "site-description", "site-about"]) {
+      const box = document.getElementById(id);
+      if (!box) continue;
+      box.addEventListener("keyup", syncPictureOptions);
+      box.addEventListener("click", syncPictureOptions);
+      box.addEventListener("select", syncPictureOptions);
+    }
     document.getElementById("picture-file").addEventListener("change", (event) => {
       const file = event.target.files && event.target.files[0];
       event.target.value = "";
@@ -503,6 +523,81 @@ ${writingTools()}
 
   function publishHint() {
     return document.getElementById("site-about") ? "Save to publish it." : "Save the piece to publish it.";
+  }
+
+  function pictureChoice(id, allowed) {
+    const select = document.getElementById(id);
+    const value = select ? select.value : "";
+    return allowed.includes(value) ? value : "";
+  }
+
+  function pictureSize() {
+    return pictureChoice("picture-size", ["small", "medium", "large"]);
+  }
+
+  function picturePlace() {
+    return pictureChoice("picture-place", ["left", "right"]);
+  }
+
+  function pictureSyntax(alt, url) {
+    const size = pictureSize();
+    const place = picturePlace();
+    return `![${alt}](${url})${size ? `{${size}}` : ""}${place ? `{${place}}` : ""}`;
+  }
+
+  function imageMarks(suffix) {
+    let size = "";
+    let place = "";
+    const marks = String(suffix || "").match(/\{(small|medium|large|left|right|center)\}/gi) || [];
+    for (const mark of marks) {
+      const token = mark.slice(1, -1).toLowerCase();
+      if (token === "small" || token === "medium" || token === "large") size = token;
+      if (token === "left" || token === "right") place = token;
+    }
+    return { size, place };
+  }
+
+  function imageAtCursor() {
+    const el = bodyField();
+    if (!el) return null;
+    const cursor = el.selectionStart;
+    const pattern = /!\[([^\]]*)\]\(([^)\s]+)\)((?:\{(?:small|medium|large|left|right|center)\}){0,2})/gi;
+    let match;
+    while ((match = pattern.exec(el.value))) {
+      const start = match.index;
+      const end = start + match[0].length;
+      if (cursor >= start && cursor <= end) {
+        return { el, start, end, alt: match[1], url: match[2], ...imageMarks(match[3]) };
+      }
+    }
+    return null;
+  }
+
+  let sizingPicture = false;
+
+  function syncPictureOptions() {
+    const sizeSelect = document.getElementById("picture-size");
+    const placeSelect = document.getElementById("picture-place");
+    const image = imageAtCursor();
+    if (!sizeSelect || !placeSelect || !image) return;
+    sizingPicture = true;
+    sizeSelect.value = image.size;
+    placeSelect.value = image.place;
+    sizingPicture = false;
+  }
+
+  function applyPictureOptions() {
+    if (sizingPicture) return;
+    const image = imageAtCursor();
+    if (!image) return;
+    const size = pictureSize();
+    const place = picturePlace();
+    const next = `![${image.alt}](${image.url})${size ? `{${size}}` : ""}${place ? `{${place}}` : ""}`;
+    if (next === image.el.value.slice(image.start, image.end)) return;
+    image.el.setRangeText(next, image.start, image.end, "end");
+    image.el.focus();
+    const where = place === "left" ? "on the left" : place === "right" ? "on the right" : "in the center";
+    status(`Picture set to ${size || "default"}, ${where}. ${publishHint()}`);
   }
 
   function wrapSelection(before, after) {
@@ -747,7 +842,7 @@ ${writingTools()}
       await writeFile(`writing/images/${name}`, { base64: bytesToBase64(bytes) }, `Add picture ${name}`, "");
       const el = bodyField();
       const alt = base.replace(/-/g, " ");
-      el.setRangeText(`![${alt}](/images/${name})`, el.selectionStart, el.selectionEnd, "end");
+      el.setRangeText(pictureSyntax(alt, `/images/${name}`), el.selectionStart, el.selectionEnd, "end");
       el.focus();
       status(`Picture added. ${publishHint()}`);
     } catch (error) {

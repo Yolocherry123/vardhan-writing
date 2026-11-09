@@ -37,6 +37,18 @@ function safeUrl(url) {
   return scheme[1].toLowerCase() === "https" || scheme[1].toLowerCase() === "http" || scheme[1].toLowerCase() === "mailto";
 }
 
+function imageOptions(suffix) {
+  let size = "";
+  let place = "";
+  const marks = String(suffix || "").match(/\{(small|medium|large|left|right|center)\}/gi) || [];
+  for (const mark of marks) {
+    const token = mark.slice(1, -1).toLowerCase();
+    if (token === "small" || token === "medium" || token === "large") size = token;
+    if (token === "left" || token === "right") place = token;
+  }
+  return { size, place };
+}
+
 function mediaUrl(url, depth) {
   const trimmed = url.trim();
   if (!safeUrl(trimmed)) return null;
@@ -56,10 +68,15 @@ function inline(raw, depth = 0) {
     codes.push(code);
     return `\u0000${codes.length - 1}\u0000`;
   });
-  text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (full, alt, url) => {
+  text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)\)((?:\{(?:small|medium|large|left|right|center)\}){0,2})/gi, (full, alt, url, suffix) => {
     const src = mediaUrl(url, depth);
     if (!src) return alt;
-    return `<img src="${src}" alt="${alt}">`;
+    const options = imageOptions(suffix);
+    const classes = [];
+    if (options.size) classes.push(`size-${options.size}`);
+    if (options.place) classes.push(`place-${options.place}`);
+    const named = classes.length ? ` class="${classes.join(" ")}"` : "";
+    return `<img src="${src}" alt="${alt}"${named}>`;
   });
   text = text.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (full, label, url) => {
     const href = mediaUrl(url, depth);
@@ -395,7 +412,7 @@ function pieceUpdated(value, filename) {
 function plainText(body) {
   return body
     .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
     .replace(/\{(?:left|center|right|justify|ragged)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
     .replace(/\s+/g, " ")
@@ -405,7 +422,7 @@ function plainText(body) {
 function firstSentence(body) {
   const plain = body
     .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
     .replace(/\{(?:left|center|right|justify|ragged)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
     .replace(/\s+/g, " ")
@@ -456,7 +473,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <link rel="manifest" href="${prefix}manifest.webmanifest">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${prefix}icon-192.png">
-<link rel="stylesheet" href="${prefix}site.css?v=48">
+<link rel="stylesheet" href="${prefix}site.css?v=50">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -1177,6 +1194,16 @@ function selfCheck() {
   assert.equal(moved.slug, "keep");
   assert.throws(() => readPieceName("notes.md", "2026-11-08"));
   assert.match(renderMarkdown("![scan](/images/scan.png)", 1), /<img src="\.\.\/images\/scan.png" alt="scan">/);
+  assert.doesNotMatch(renderMarkdown("![scan](/images/scan.png)"), /size-/);
+  assert.match(renderMarkdown("![scan](/images/scan.png){small}"), /class="size-small"/);
+  assert.match(renderMarkdown("![scan](/images/scan.png){medium}", 1), /class="size-medium"/);
+  assert.match(renderMarkdown("![Wide](/images/scan.png){large}"), /class="size-large"/);
+  assert.match(renderMarkdown("![scan](/images/scan.png){left}"), /class="place-left"/);
+  assert.match(renderMarkdown("![scan](/images/scan.png){small}{right}"), /class="size-small place-right"/);
+  assert.match(renderMarkdown("![scan](/images/scan.png){left}{medium}"), /class="size-medium place-left"/);
+  assert.doesNotMatch(renderMarkdown("![scan](/images/scan.png){center}"), /place-/);
+  assert.equal(firstSentence("Seen ![plane](/images/plane.webp){large} now."), "Seen now.");
+  assert.equal(firstSentence("Seen ![plane](/images/plane.webp){small}{left} now."), "Seen now.");
   assert.match(renderMarkdown("![scan](images/scan.png)", 0), /src="images\/scan.png"/);
   assert.doesNotMatch(renderMarkdown("![scan](/images/scan.png)", 0), /src="\/images/);
   assert.match(renderMarkdown("[file](/images/scan.pdf)", 1), /href="\.\.\/images\/scan.pdf"/);
@@ -1248,6 +1275,8 @@ function main() {
   assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /src="edit\.js\?v=/);
   assert.match(editor, /id="video"/);
   assert.match(editor, /id="youtube"/);
+  assert.match(editor, /id="picture-size"/);
+  assert.match(editor, /id="picture-place"/);
   assert.match(editor, /function writingTools/);
   assert.match(editor, /bindWritingTools\(document.getElementById\("site-about"\)\)/);
   assert.match(editor, /id="site-description"/);
