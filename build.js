@@ -3,6 +3,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const zlib = require("zlib");
 const { execFileSync } = require("child_process");
 const assert = require("node:assert/strict");
 
@@ -428,7 +429,12 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <meta name="description" content="${escapeHtml(description)}">
 <meta name="author" content="${escapeHtml(config.author)}">
 <meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="${escapeHtml(config.title)}">
+<link rel="manifest" href="${prefix}manifest.webmanifest">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="${prefix}icon-192.png">
 <link rel="stylesheet" href="${prefix}site.css?v=44">
 ${canonical}
 </head>
@@ -663,6 +669,110 @@ function favicon(config) {
 `;
 }
 
+const ICON_GLYPHS = {
+  A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+  B: ["11110", "10001", "10001", "11110", "10001", "10001", "11110"],
+  C: ["01111", "10000", "10000", "10000", "10000", "10000", "01111"],
+  D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
+  E: ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+  F: ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
+  G: ["01111", "10000", "10000", "10111", "10001", "10001", "01111"],
+  H: ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
+  I: ["11111", "00100", "00100", "00100", "00100", "00100", "11111"],
+  J: ["00111", "00010", "00010", "00010", "10010", "10010", "01100"],
+  K: ["10001", "10010", "10100", "11000", "10100", "10010", "10001"],
+  L: ["10000", "10000", "10000", "10000", "10000", "10000", "11111"],
+  M: ["10001", "11011", "10101", "10101", "10001", "10001", "10001"],
+  N: ["10001", "11001", "10101", "10011", "10001", "10001", "10001"],
+  O: ["01110", "10001", "10001", "10001", "10001", "10001", "01110"],
+  P: ["11110", "10001", "10001", "11110", "10000", "10000", "10000"],
+  Q: ["01110", "10001", "10001", "10001", "10101", "10010", "01101"],
+  R: ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
+  S: ["01111", "10000", "10000", "01110", "00001", "00001", "11110"],
+  T: ["11111", "00100", "00100", "00100", "00100", "00100", "00100"],
+  U: ["10001", "10001", "10001", "10001", "10001", "10001", "01110"],
+  V: ["10001", "10001", "10001", "10001", "10001", "01010", "00100"],
+  W: ["10001", "10001", "10001", "10101", "10101", "10101", "01010"],
+  X: ["10001", "10001", "01010", "00100", "01010", "10001", "10001"],
+  Y: ["10001", "10001", "01010", "00100", "00100", "00100", "00100"],
+  Z: ["11111", "00001", "00010", "00100", "01000", "10000", "11111"],
+};
+
+function pngChunk(type, data) {
+  const head = Buffer.alloc(8);
+  head.writeUInt32BE(data.length, 0);
+  head.write(type, 4, 4, "ascii");
+  let crc = 0xffffffff;
+  for (const byte of Buffer.concat([head.subarray(4), data])) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+  }
+  const tail = Buffer.alloc(4);
+  tail.writeUInt32BE((crc ^ 0xffffffff) >>> 0, 0);
+  return Buffer.concat([head, data, tail]);
+}
+
+function iconPng(size, letter) {
+  const rgba = Buffer.alloc(size * size * 4, 255);
+  const ink = (x, y) => {
+    if (x < 0 || y < 0 || x >= size || y >= size) return;
+    const index = (y * size + x) * 4;
+    rgba[index] = 0;
+    rgba[index + 1] = 0;
+    rgba[index + 2] = 0;
+  };
+  const border = Math.max(1, Math.round(size / 16));
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      if (x < border || y < border || x >= size - border || y >= size - border) ink(x, y);
+    }
+  }
+  const glyph = ICON_GLYPHS[letter] || ICON_GLYPHS.V;
+  const scale = Math.max(1, Math.floor(size * 0.46 / glyph.length));
+  const originX = Math.floor((size - glyph[0].length * scale) / 2);
+  const originY = Math.floor((size - glyph.length * scale) / 2);
+  glyph.forEach((row, y) => {
+    [...row].forEach((bit, x) => {
+      if (bit !== "1") return;
+      for (let dy = 0; dy < scale; dy += 1) {
+        for (let dx = 0; dx < scale; dx += 1) ink(originX + x * scale + dx, originY + y * scale + dy);
+      }
+    });
+  });
+  const stride = size * 4 + 1;
+  const raw = Buffer.alloc(stride * size);
+  for (let y = 0; y < size; y += 1) rgba.copy(raw, y * stride + 1, y * size * 4, (y + 1) * size * 4);
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(size, 0);
+  header.writeUInt32BE(size, 4);
+  header[8] = 8;
+  header[9] = 6;
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk("IHDR", header),
+    pngChunk("IDAT", zlib.deflateSync(raw)),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+function webManifest(config) {
+  return `${JSON.stringify({
+    name: config.title,
+    short_name: config.title,
+    description: config.description,
+    id: "./",
+    start_url: "home.html",
+    scope: "./",
+    display: "standalone",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
+    icons: [
+      { src: "icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+    ],
+  }, null, 2)}\n`;
+}
+
 function copyStatic() {
   fs.copyFileSync(path.join(root, "src", "site.css"), path.join(docsDir, "site.css"));
   fs.copyFileSync(path.join(root, "src", "edit.html"), path.join(docsDir, "edit.html"));
@@ -706,6 +816,10 @@ function writeSite(config, posts) {
   fs.writeFileSync(path.join(docsDir, "search.html"), renderSearch(config, posts));
   fs.writeFileSync(path.join(docsDir, "404.html"), renderMissing(config));
   fs.writeFileSync(path.join(docsDir, "favicon.svg"), favicon(config));
+  fs.writeFileSync(path.join(docsDir, "manifest.webmanifest"), webManifest(config));
+  const mark = (config.title.trim().charAt(0) || "V").toUpperCase();
+  fs.writeFileSync(path.join(docsDir, "icon-192.png"), iconPng(192, mark));
+  fs.writeFileSync(path.join(docsDir, "icon-512.png"), iconPng(512, mark));
   fs.writeFileSync(path.join(docsDir, ".nojekyll"), "");
   for (const post of posts) {
     fs.writeFileSync(path.join(docsDir, "posts", `${post.slug}.html`), renderPost(config, post));
@@ -992,6 +1106,11 @@ function main() {
   const index = fs.readFileSync(path.join(docsDir, "home.html"), "utf8");
   for (const post of posts) assert.match(index, new RegExp(escapeRegExp(escapeHtml(post.title))));
   assert.match(index, /href="edit.html"/);
+  assert.match(index, /rel="manifest" href="manifest\.webmanifest"/);
+  const manifest = JSON.parse(fs.readFileSync(path.join(docsDir, "manifest.webmanifest"), "utf8"));
+  assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.start_url, "home.html");
+  assert.equal(fs.readFileSync(path.join(docsDir, "icon-512.png")).subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
   assert.match(index, new RegExp(`class="home font-${TYPEFACE}"`));
   assert.match(fs.readFileSync(path.join(docsDir, "index.html"), "utf8"), /url=home\.html/);
   assert.match(index, /href="essays.html"/);
