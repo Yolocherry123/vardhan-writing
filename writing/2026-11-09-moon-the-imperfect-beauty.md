@@ -1,17 +1,17 @@
 ---
 title: జాబిలి(Moon) - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T16:02:00+05:30
+updated: 2026-11-09T16:09:00+05:30
 kind: essay
 align: center
-summary: The moon has been a romantic's embodiment of a Manmathī's love
+summary: The moon has been a romantic's embodiment of a మన్మథీ's love for time immemorial
 attribution: 
 source: 
 ---
 
 ![images2](/images/images2-2.jpg)
 
-***1. The moon is perhaps the best representation of a Manmathī.***
+***1. The moon is perhaps the best representation of a మన్మథీ.***
 
 While begrudgingly trotting towards the campus gate in the intense summer heat of 2024, I eyes glanced up at the evening sky as I muttered curses underneath my breath at the bitter realisation that going to the gate also meant walking back to hostel.. taking the same drab route. 
 
