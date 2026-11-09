@@ -1,7 +1,7 @@
 ---
 title: Jaabili(Moon) - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T03:57:00+05:30
+updated: 2026-11-09T13:05:00+05:30
 kind: essay
 align: center
 summary: The moon has been romantisized by people from different geographies, accross time zones and for time immemorial. Let's explore my interpreation of why it is.
@@ -17,4 +17,4 @@ While begrudgingly trotting towards the campus gate in the intense summer heat o
 
 As my eyes scanned the cerulean blue sky glancing at the scattered wisps drifting leisurely when the bright ball of intensity almost blinded me. A few frolicking birds flew around me when something caught me by surprise, and the moment I say it, it became the absolute cynosure of my eyes.
 
-The pearl drop in the sky.. contrasted by the vivid backdrop made me blurt, 'The moon looks beautiful'
+The pearl drop in the sky.. contrasted by the vivid backdrop made me whisper, 'The moon looks beautiful'.. My friend who had been silent till now, brooding in his own thoughts felt a need to reply to statement.
