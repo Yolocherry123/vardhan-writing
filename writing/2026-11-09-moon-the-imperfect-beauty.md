@@ -1,7 +1,7 @@
 ---
 title: జాబిలి - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T18:49:00+05:30
+updated: 2026-11-09T18:51:00+05:30
 kind: essay
 align: justify
 summary: The moon has been a romantic's embodiment of a మన్మథీ's love for time immemorial
@@ -23,7 +23,7 @@ He tells me in a slow voice, 'the moon looks pretty only when you're thinking of
 
 
 {center}
-**Then the a sudden epiphany hit me.**
+*Then the a sudden epiphany hit me.*
 
 {center}
 > **The moon is the perfect reflection of a lover because it is the way it is... imperfect**
