@@ -1,7 +1,7 @@
 ---
 title: జాబిలి - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T20:47:00+05:30
+updated: 2026-11-09T20:57:00+05:30
 kind: essay
 align: ragged
 summary: The moon has been a romantic's embodiment of a మన్మథీ's love for time immemorial
