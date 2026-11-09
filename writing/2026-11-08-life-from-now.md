@@ -1,7 +1,7 @@
 ---
 title: Life's gift
 date: 2026-11-08T17:49:00+05:30
-updated: 2026-11-09T01:03:00+05:30
+updated: 2026-11-09T15:42:00+05:30
 kind: quote
 align: center
 summary: 
@@ -9,5 +9,5 @@ attribution: Vardhan Madala
 source: 
 ---
 
-Life didn't give me the one thing I really wanted. 
-So I'm going to make it give me everything else.
+'Life didn't give me the one thing I really wanted. 
+So I'm going to make it give me everything else.'
