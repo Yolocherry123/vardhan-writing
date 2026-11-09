@@ -1,9 +1,9 @@
 ---
 title: జాబిలి - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-09T19:19:00+05:30
+updated: 2026-11-09T19:36:00+05:30
 kind: essay
-align: justify
+align: ragged
 summary: The moon has been a romantic's embodiment of a మన్మథీ's love for time immemorial
 attribution: 
 source: 
@@ -22,15 +22,10 @@ The pearl drop in the sky.. contrasted by the vivid backdrop made me whisper, 'T
 He tells me in a slow voice, 'the moon looks pretty only when you're thinking of someone you like..'. I scoffed at what he said. 'There's no way that can be true!' I exclaimed. 'I don't see the appeal'. The moon to me just looked like something that was put in place to fill the repetitive and monotonous sky. After all, something that's supposed to remind me of someone I like should be smooth and shiny, not filled with blotches of grey and pummelled with craters.
 
 
-
-
-
 {center}
 *Then the a sudden epiphany hit me.*
 
-
 > **The moon is the perfect reflection of a lover because it is the way it is... imperfect**
-
 
 {center}
 After a few moments of rumination, *the moon* to me was the absolute quintessence - *the very personification of a lover*.
