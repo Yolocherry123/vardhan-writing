@@ -918,8 +918,25 @@ a.kicker:hover {
   text-wrap: balance;
 }
 
+.fold-wrap { margin: 0.55em 0 0; }
+
+.fold-lead {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+.fold-wrap:has(details[open]) .fold-lead {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow: visible;
+}
+
 .fold {
-  margin: 0.55em 0 0;
+  margin: 0.45em 0 0;
 }
 
 .fold summary {
@@ -1270,5 +1287,11 @@ a.kicker:hover {
   .sheet { width: auto; padding: 0; }
   a { text-decoration: none; }
   .fold summary { display: none; }
-  .fold .home-note { display: block; }
+  .fold-lead,
+  .fold .home-note {
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    overflow: visible;
+  }
 }

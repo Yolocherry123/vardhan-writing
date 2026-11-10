@@ -490,7 +490,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <link rel="manifest" href="${prefix}manifest.webmanifest">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${prefix}icon-192.png">
-<link rel="stylesheet" href="${prefix}site.css?v=52">
+<link rel="stylesheet" href="${prefix}site.css?v=53">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -582,16 +582,70 @@ function quoteInterpretation(post) {
   return `<div class="interpretation">\n<p class="kicker">Interpretation</p>\n<div class="prose">${renderMarkdown(text, 1)}</div>\n</div>`;
 }
 
+function htmlBlocks(html) {
+  const blocks = [];
+  const pattern = /<(p|figure|pre|blockquote|ul|ol|h[2-4]|div)\b[^>]*>[\s\S]*?<\/\1>|<hr\b[^>]*>/gi;
+  const source = String(html || "").trim();
+  let match;
+  let cursor = 0;
+  while ((match = pattern.exec(source))) {
+    if (match.index > cursor) {
+      const gap = source.slice(cursor, match.index).trim();
+      if (gap) blocks.push(gap);
+    }
+    blocks.push(match[0]);
+    cursor = pattern.lastIndex;
+  }
+  const tail = source.slice(cursor).trim();
+  if (tail) blocks.push(tail);
+  if (!blocks.length && source) blocks.push(source);
+  return blocks;
+}
+
+function blockText(html) {
+  return String(html)
+    .replace(/<img\b[^>]*>/gi, " ")
+    .replace(/<video\b[\s\S]*?<\/video>/gi, " ")
+    .replace(/<iframe\b[\s\S]*?<\/iframe>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function mediaOnly(html) {
+  return !blockText(html);
+}
+
+function thoughtHome(html, align) {
+  const klass = `home-note prose align-${align || "center"}`;
+  const blocks = htmlBlocks(html);
+  const leadIndex = blocks.findIndex((block) => !mediaOnly(block));
+  const lead = leadIndex === -1 ? "" : blocks[leadIndex];
+  const pictures = [];
+  const leadText = lead.replace(/<img\b[^>]*>/gi, (tag) => {
+    pictures.push(`<p>${tag}</p>`);
+    return "";
+  }).replace(/(<p[^>]*>)\s+/gi, "$1");
+  const rest = [...pictures, ...blocks.filter((_, index) => index !== leadIndex)];
+  const longLead = blockText(leadText).length > 120;
+  if (!rest.length && !longLead) return `<div class="${klass}">${html}</div>`;
+  const more = rest.join("\n");
+  return `<div class="fold-wrap">
+<div class="fold-lead ${klass}">${leadText}</div>
+<details class="fold">
+<summary><span class="when-closed">[+]</span><span class="when-open">[–]</span></summary>
+${more ? `<div class="${klass}">${more}</div>` : ""}
+</details>
+</div>`;
+}
+
 function homePreview(post) {
   if (post.kind === "quote") {
     return `<div class="home-quote prose quote">${post.html}</div>${quoteCredit(post)}`;
   }
   if (post.kind === "note") {
     if (!String(post.homeHtml || "").trim()) return "";
-    return `<details class="fold">
-<summary><span class="when-closed">[+]</span><span class="when-open">[–]</span></summary>
-<div class="home-note prose align-${post.align || "center"}">${post.homeHtml}</div>
-</details>`;
+    return thoughtHome(post.homeHtml, post.align);
   }
   if (post.kind === "essay" && post.summary) {
     return `<p class="dek">${inline(post.summary)}</p>`;
@@ -1188,7 +1242,24 @@ function selfCheck() {
     html: "<p>The full older note.</p>",
     homeHtml: "<p>The full older note.</p>",
   }]);
-  assert.match(olderNoteHome, /<details class="fold">\s*<summary><span class="when-closed">\[\+\]<\/span><span class="when-open">\[–\]<\/span><\/summary>\s*<div class="home-note prose align-left"><p>The full older note\.<\/p><\/div>/);
+  assert.match(olderNoteHome, /<div class="home-note prose align-left"><p>The full older note\.<\/p><\/div>/);
+  assert.doesNotMatch(olderNoteHome, /<details class="fold">/);
+  const longNoteHome = renderHome(sampleConfig, [{
+    title: "A long thought",
+    date: "2026-11-08",
+    when: "2026-11-08",
+    instant: null,
+    kind: "note",
+    summary: "",
+    attribution: "",
+    source: "",
+    align: "center",
+    slug: "long-thought",
+    html: "<p>Opening line of the thought.</p><p>The rest stays on the page.</p>",
+    homeHtml: "<p>Opening line of the thought.</p><p>The rest stays on the page.</p>",
+  }]);
+  assert.match(longNoteHome, /class="fold-lead home-note prose align-center"><p>Opening line of the thought\.<\/p><\/div>\s*<details class="fold">/);
+  assert.match(longNoteHome, /<div class="home-note prose align-center"><p>The rest stays on the page\.<\/p><\/div>/);
   assert.match(olderNoteHome, /The short account\./);
   assert.doesNotMatch(olderNoteHome, /much longer essay body/);
   const revisedAt = new Date("2026-11-08T12:31:00+05:30");
