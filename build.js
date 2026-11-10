@@ -490,7 +490,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <link rel="manifest" href="${prefix}manifest.webmanifest">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${prefix}icon-192.png">
-<link rel="stylesheet" href="${prefix}site.css?v=53">
+<link rel="stylesheet" href="${prefix}site.css?v=54">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -616,22 +616,42 @@ function mediaOnly(html) {
   return !blockText(html);
 }
 
+function openingHtml(block) {
+  if (!/<img\b/i.test(block)) return `<div class="fold-lines">${block}</div>`;
+  const parts = [];
+  const pattern = /<img\b[^>]*>/gi;
+  let cursor = 0;
+  let match;
+  let text = "";
+  const flushText = () => {
+    const cleaned = text.replace(/<\/?p[^>]*>/gi, " ").replace(/\s+/g, " ").trim();
+    if (cleaned) parts.push(`<div class="fold-lines"><p>${cleaned}</p></div>`);
+    text = "";
+  };
+  while ((match = pattern.exec(block))) {
+    text += block.slice(cursor, match.index);
+    flushText();
+    parts.push(`<p>${match[0]}</p>`);
+    cursor = match.index + match[0].length;
+  }
+  text += block.slice(cursor);
+  flushText();
+  return parts.join("\n");
+}
+
 function thoughtHome(html, align) {
   const klass = `home-note prose align-${align || "center"}`;
   const blocks = htmlBlocks(html);
   const leadIndex = blocks.findIndex((block) => !mediaOnly(block));
-  const lead = leadIndex === -1 ? "" : blocks[leadIndex];
-  const pictures = [];
-  const leadText = lead.replace(/<img\b[^>]*>/gi, (tag) => {
-    pictures.push(`<p>${tag}</p>`);
-    return "";
-  }).replace(/(<p[^>]*>)\s+/gi, "$1");
-  const rest = [...pictures, ...blocks.filter((_, index) => index !== leadIndex)];
-  const longLead = blockText(leadText).length > 120;
+  if (leadIndex === -1) return `<div class="${klass}">${html}</div>`;
+  const opening = blocks.slice(0, leadIndex + 1);
+  const rest = blocks.slice(leadIndex + 1);
+  const leadHtml = opening.map((block, index) => index < opening.length - 1 ? block : openingHtml(block)).join("\n");
+  const longLead = blockText(blocks[leadIndex]).length > 120;
   if (!rest.length && !longLead) return `<div class="${klass}">${html}</div>`;
   const more = rest.join("\n");
   return `<div class="fold-wrap">
-<div class="fold-lead ${klass}">${leadText}</div>
+<div class="fold-lead ${klass}">${leadHtml}</div>
 <details class="fold">
 <summary><span class="when-closed">[+]</span><span class="when-open">[–]</span></summary>
 ${more ? `<div class="${klass}">${more}</div>` : ""}
@@ -1258,8 +1278,25 @@ function selfCheck() {
     html: "<p>Opening line of the thought.</p><p>The rest stays on the page.</p>",
     homeHtml: "<p>Opening line of the thought.</p><p>The rest stays on the page.</p>",
   }]);
-  assert.match(longNoteHome, /class="fold-lead home-note prose align-center"><p>Opening line of the thought\.<\/p><\/div>\s*<details class="fold">/);
+  assert.match(longNoteHome, /class="fold-lead home-note prose align-center"><div class="fold-lines"><p>Opening line of the thought\.<\/p><\/div><\/div>\s*<details class="fold">/);
   assert.match(longNoteHome, /<div class="home-note prose align-center"><p>The rest stays on the page\.<\/p><\/div>/);
+  const pictured = renderHome(sampleConfig, [{
+    title: "With a picture",
+    date: "2026-11-08",
+    when: "2026-11-08",
+    instant: null,
+    kind: "note",
+    summary: "",
+    attribution: "",
+    source: "",
+    align: "center",
+    slug: "with-a-picture",
+    html: '<p><img src="images/moon.jpg" alt="moon"> Opening line.</p><p>Later.</p>',
+    homeHtml: '<p><img src="images/moon.jpg" alt="moon"> Opening line.</p><p>Later.</p>',
+  }]);
+  const leadEnd = pictured.indexOf("<details");
+  assert.ok(leadEnd > pictured.indexOf("images/moon.jpg"));
+  assert.match(pictured.slice(0, leadEnd), /Opening line\./);
   assert.match(olderNoteHome, /The short account\./);
   assert.doesNotMatch(olderNoteHome, /much longer essay body/);
   const revisedAt = new Date("2026-11-08T12:31:00+05:30");
