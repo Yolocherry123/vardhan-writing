@@ -918,6 +918,34 @@ a.kicker:hover {
   text-wrap: balance;
 }
 
+.fold {
+  margin: 0.55em 0 0;
+}
+
+.fold summary {
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--display);
+  letter-spacing: 0.12em;
+}
+
+.fold summary::-webkit-details-marker,
+.fold summary::marker {
+  content: "";
+  display: none;
+}
+
+.fold .when-open { display: none; }
+
+.fold[open] .when-closed { display: none; }
+
+.fold[open] .when-open { display: inline; }
+
+.fold[open] .home-note { margin-top: 0.85em; }
+
 .home-note {
   max-width: 34rem;
   margin-left: auto;
@@ -1241,4 +1269,6 @@ a.kicker:hover {
   .mast nav, .back, .continue, .colophon, .desk-toolbar, .desk-actions { display: none; }
   .sheet { width: auto; padding: 0; }
   a { text-decoration: none; }
+  .fold summary { display: none; }
+  .fold .home-note { display: block; }
 }
