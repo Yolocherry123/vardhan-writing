@@ -920,7 +920,9 @@ a.kicker:hover {
 
 .fold-wrap { margin: 0.55em 0 0; }
 
-.fold-lead {
+.fold-lead { margin: 0; }
+
+.fold-lines {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -928,7 +930,7 @@ a.kicker:hover {
   overflow: hidden;
 }
 
-.fold-wrap:has(details[open]) .fold-lead {
+.fold-wrap:has(details[open]) .fold-lines {
   display: block;
   -webkit-line-clamp: unset;
   line-clamp: unset;
@@ -1288,6 +1290,7 @@ a.kicker:hover {
   a { text-decoration: none; }
   .fold summary { display: none; }
   .fold-lead,
+  .fold-lines,
   .fold .home-note {
     display: block;
     -webkit-line-clamp: unset;
