@@ -254,11 +254,27 @@ function parseFrontMatter(raw, filename) {
   const match = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(text);
   if (!match) throw new Error(`${filename}: start the file with a --- header`);
   const data = {};
-  for (const line of match[1].split("\n")) {
+  const lines = match[1].split("\n");
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
     if (!line.trim()) continue;
     const field = /^([A-Za-z]+):\s*(.*)$/.exec(line);
     if (!field) throw new Error(`${filename}: could not read the header line "${line}"`);
-    let value = field[2].trim();
+    const rawValue = field[2].trim();
+    const block = /^([|>])[+-]?$/.exec(rawValue);
+    if (block) {
+      const collected = [];
+      while (i + 1 < lines.length && (lines[i + 1].startsWith(" ") || lines[i + 1] === "")) {
+        i += 1;
+        const next = lines[i];
+        collected.push(next.startsWith("  ") ? next.slice(2) : next.replace(/^ /, ""));
+      }
+      let value = collected.join("\n").replace(/\n+$/, "").trim();
+      if (block[1] === ">") value = value.replace(/\n(?!\n)/g, " ").replace(/[ ]+/g, " ").trim();
+      data[field[1]] = value;
+      continue;
+    }
+    let value = rawValue;
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
@@ -374,9 +390,10 @@ function loadPosts() {
       summary: data.summary || firstSentence(body),
       attribution: data.attribution || "",
       source: data.source || "",
+      interpretation: String(data.interpretation || "").trim(),
       align: pieceAlign(data.align),
       slug: identity.slug,
-      text: plainText(body),
+      text: plainText([body, data.interpretation].filter(Boolean).join("\n")),
       html: renderMarkdown(body, 1),
       homeHtml: renderMarkdown(body, 0),
     };
@@ -473,7 +490,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <link rel="manifest" href="${prefix}manifest.webmanifest">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${prefix}icon-192.png">
-<link rel="stylesheet" href="${prefix}site.css?v=50">
+<link rel="stylesheet" href="${prefix}site.css?v=51">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -559,6 +576,12 @@ function quoteCredit(post) {
   return `<p class="attribution">— ${escapeHtml(post.attribution)}${source}</p>`;
 }
 
+function quoteInterpretation(post) {
+  const text = String(post.interpretation || "").trim();
+  if (post.kind !== "quote" || !text) return "";
+  return `<div class="interpretation">\n<p class="kicker">Interpretation</p>\n<div class="prose">${renderMarkdown(text, 1)}</div>\n</div>`;
+}
+
 function homePreview(post) {
   if (post.kind === "quote") {
     return `<div class="home-quote prose quote">${post.html}</div>${quoteCredit(post)}`;
@@ -613,6 +636,7 @@ ${matching.map((post) => pieceItem(post, 0, false, kind === "quote" || kind === 
 function renderPost(config, post) {
   const align = post.kind === "quote" ? "center" : pieceAlign(post.align);
   const credit = quoteCredit(post);
+  const reading = quoteInterpretation(post);
   const proseClass = `${post.kind === "quote" ? "prose quote" : "prose"} align-${align}`;
   return page({
     config,
@@ -628,7 +652,7 @@ ${kindLink(post.kind, 1)}
 <div class="${proseClass}">
 ${post.html}
 </div>
-${credit ? `${credit}\n` : ""}${updatedLine(post)}
+${credit ? `${credit}\n` : ""}${reading ? `${reading}\n` : ""}${updatedLine(post)}
 </article>`,
   });
 }
@@ -1056,6 +1080,25 @@ function selfCheck() {
   );
   assert.equal(firstSentence("hi\n\n{ragged}\nmore words"), "hi more words");
   assert.match(quotePage, /— Simone Weil, <cite>Gravity and Grace<\/cite>/);
+  assert.doesNotMatch(quotePage, /class="interpretation"/);
+  const interpreted = renderPost(
+    { title: "T", description: "d", author: "A", about: "b", url: "" },
+    {
+      title: "On attention",
+      date: "2026-11-01",
+      kind: "quote",
+      summary: "Weil",
+      attribution: "Simone Weil",
+      source: "Gravity and Grace",
+      interpretation: "Attention is a way of looking.\n\nIt asks for nothing back.",
+      slug: "on-attention",
+      html: "<p>Attention is the rarest and purest form of generosity.</p>",
+    },
+  );
+  assert.match(interpreted, /<p class="attribution">— Simone Weil, <cite>Gravity and Grace<\/cite><\/p>\n<div class="interpretation">/);
+  assert.match(interpreted, /<p class="kicker">Interpretation<\/p>\n<div class="prose"><p>Attention is a way of looking\.<\/p>\n<p>It asks for nothing back\.<\/p><\/div>/);
+  const readHeader = parseFrontMatter("---\ntitle: Hello\ninterpretation: |\n  One line.\n\n  Another line.\n---\n\nBody.\n", "sample.md");
+  assert.equal(readHeader.data.interpretation, "One line.\n\nAnother line.");
   const sampleConfig = { title: "T", description: "d", author: "A", about: "b", url: "" };
   const sampleEssay = {
     title: "An essay",
@@ -1107,6 +1150,10 @@ function selfCheck() {
   const quoteHome = renderHome(sampleConfig, [sampleQuote, sampleEssay]);
   assert.match(quoteHome, /<div class="home-quote prose quote"><p>The sdkjf lsdkjflajkh<\/p><\/div>/);
   assert.match(quoteHome, /The short account\./);
+  const readingHome = renderHome(sampleConfig, [{ ...sampleQuote, interpretation: "Hidden on the home page." }, sampleEssay]);
+  assert.match(readingHome, /The sdkjf lsdkjflajkh/);
+  assert.doesNotMatch(readingHome, /Hidden on the home page/);
+  assert.doesNotMatch(readingHome, /class="interpretation"/);
   const noteHome = renderHome(sampleConfig, [{
     title: "Hello",
     date: "2026-11-08",
@@ -1277,6 +1324,7 @@ function main() {
   assert.match(editor, /id="youtube"/);
   assert.match(editor, /id="picture-size"/);
   assert.match(editor, /id="picture-place"/);
+  assert.match(editor, /id="interpretation"/);
   assert.match(editor, /function writingTools/);
   assert.match(editor, /bindWritingTools\(document.getElementById\("site-about"\)\)/);
   assert.match(editor, /id="site-description"/);

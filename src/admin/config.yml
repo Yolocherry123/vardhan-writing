@@ -49,6 +49,11 @@ collections:
         widget: string
         required: false
         hint: "For a quote, the book or essay, if you have it."
+      - label: Interpretation
+        name: interpretation
+        widget: text
+        required: false
+        hint: "For a quote. Shown under the quote when the piece is opened. It stays off the home page."
       - label: Alignment
         name: align
         widget: select

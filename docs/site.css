@@ -944,6 +944,30 @@ a.kicker:hover {
 
 .attribution cite { font-style: italic; }
 
+.interpretation {
+  margin: 1.75em auto 0;
+  max-width: 34rem;
+  font-style: normal;
+}
+
+.interpretation .kicker {
+  margin-bottom: 0.45em;
+}
+
+.interpretation .prose,
+.interpretation .prose p {
+  font-style: normal;
+  text-align: center;
+  text-align-last: center;
+}
+
+.interpretation .prose p {
+  text-indent: 0;
+  margin: 0 0 0.85em;
+}
+
+.interpretation .prose p:last-child { margin-bottom: 0; }
+
 .colophon {
   margin-top: 3.5em;
   text-align: center;
@@ -1115,6 +1139,7 @@ a.kicker:hover {
 
 .desk textarea.compact {
   min-height: 6em;
+  margin-top: 0.35em;
 }
 
 .desk textarea {

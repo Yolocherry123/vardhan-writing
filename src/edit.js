@@ -129,11 +129,27 @@
     const match = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(text);
     if (!match) return { data: {}, body: text.trim() };
     const data = {};
-    for (const line of match[1].split("\n")) {
+    const lines = match[1].split("\n");
+    for (let i = 0; i < lines.length; i += 1) {
+      const line = lines[i];
       if (!line.trim()) continue;
       const field = /^([A-Za-z]+):\s*(.*)$/.exec(line);
       if (!field) continue;
-      let value = field[2].trim();
+      const rawValue = field[2].trim();
+      const block = /^([|>])[+-]?$/.exec(rawValue);
+      if (block) {
+        const collected = [];
+        while (i + 1 < lines.length && (lines[i + 1].startsWith(" ") || lines[i + 1] === "")) {
+          i += 1;
+          const next = lines[i];
+          collected.push(next.startsWith("  ") ? next.slice(2) : next.replace(/^ /, ""));
+        }
+        let value = collected.join("\n").replace(/\n+$/, "").trim();
+        if (block[1] === ">") value = value.replace(/\n(?!\n)/g, " ").replace(/[ ]+/g, " ").trim();
+        data[field[1]] = value;
+        continue;
+      }
+      let value = rawValue;
       if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
         value = value.slice(1, -1);
       }
@@ -146,7 +162,15 @@
     return `${key}: ${String(value ?? "").replace(/\r?\n/g, " ").trim()}`;
   }
 
+  function fieldBlock(key, value) {
+    const text = String(value ?? "").replace(/\r\n/g, "\n").trim();
+    if (!text) return "";
+    if (!text.includes("\n")) return `${key}: ${text}`;
+    return [`${key}: |`, ...text.split("\n").map((line) => (line ? `  ${line}` : ""))].join("\n");
+  }
+
   function serializePiece(data, body) {
+    const interpretation = fieldBlock("interpretation", data.interpretation);
     return [
       "---",
       fieldLine("title", data.title),
@@ -157,6 +181,7 @@
       fieldLine("summary", data.summary),
       fieldLine("attribution", data.attribution),
       fieldLine("source", data.source),
+      ...(interpretation ? [interpretation] : []),
       "---",
       "",
       String(body || "").replace(/\s+$/, ""),
@@ -314,6 +339,7 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
           summary: "",
           attribution: "",
           source: "",
+          interpretation: "",
         },
         body: "",
       }));
@@ -382,6 +408,10 @@ ${notice ? `<p id="status" class="desk-status">${escapeHtml(notice)}</p>` : ""}
 </div>
 ${writingTools()}
 <textarea id="body" spellcheck="true" aria-label="Body"></textarea>
+<div id="interpretation-field">
+<label for="interpretation">Interpretation</label>
+<textarea id="interpretation" class="compact" spellcheck="true" aria-label="Interpretation"></textarea>
+</div>
 <div class="desk-actions"><button type="button" id="save">Save</button><button type="button" id="delete">Delete</button></div>
 <p id="status" class="desk-status"></p>
 </section>`;
@@ -393,8 +423,14 @@ ${writingTools()}
     document.getElementById("attribution").value = data.attribution || "";
     document.getElementById("source").value = data.source || "";
     document.getElementById("body").value = piece.body || "";
+    document.getElementById("interpretation").value = data.interpretation || "";
     const quoteFields = document.getElementById("quote-fields");
-    const syncKind = () => { quoteFields.hidden = document.getElementById("kind").value !== "quote"; };
+    const interpretationField = document.getElementById("interpretation-field");
+    const syncKind = () => {
+      const quote = document.getElementById("kind").value === "quote";
+      quoteFields.hidden = !quote;
+      interpretationField.hidden = !quote;
+    };
     const syncAlign = () => {
       const body = document.getElementById("body");
       const value = document.getElementById("align").value;
@@ -429,6 +465,7 @@ ${writingTools()}
       summary: document.getElementById("summary").value,
       attribution: document.getElementById("attribution").value,
       source: document.getElementById("source").value,
+      interpretation: document.getElementById("interpretation").value,
     };
   }
 
@@ -486,7 +523,7 @@ ${writingTools()}
 
   function bindWritingTools(field) {
     writingTarget = field;
-    for (const id of ["body", "site-description", "site-about"]) {
+    for (const id of ["body", "interpretation", "site-description", "site-about"]) {
       const box = document.getElementById(id);
       if (!box) continue;
       const remember = () => { writingTarget = box; };
@@ -500,7 +537,7 @@ ${writingTools()}
     document.getElementById("picture").addEventListener("click", () => document.getElementById("picture-file").click());
     document.getElementById("picture-size").addEventListener("change", applyPictureOptions);
     document.getElementById("picture-place").addEventListener("change", applyPictureOptions);
-    for (const id of ["body", "site-description", "site-about"]) {
+    for (const id of ["body", "interpretation", "site-description", "site-about"]) {
       const box = document.getElementById(id);
       if (!box) continue;
       box.addEventListener("keyup", syncPictureOptions);
