@@ -1,7 +1,7 @@
 ---
 title: The different world
 date: 2026-11-10T21:42:00+05:30
-updated: 2026-11-10T22:25:00+05:30
+updated: 2026-11-10T22:30:00+05:30
 kind: note
 align: center
 summary: 
@@ -10,7 +10,7 @@ source:
 ---
 
 ![51084](/images/51084.jpg){medium}
-The world is not just trivial or simple. Philosophy without thx or psychedelics is nothing but a rant on the existing world.
+The world is not just trivial or simple. Philosophy without thc or psychedelics is nothing but a rant on the existing world.
 
 These 'out of world' experiences while still 'in the world' are only possible because of the sine qua non of sensory perception. 
 
