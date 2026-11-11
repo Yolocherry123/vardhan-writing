@@ -1,7 +1,7 @@
 ---
 title: జాబిలి - the imperfect reprasentation of beauty
 date: 2026-11-09T01:04:00+05:30
-updated: 2026-11-11T20:40:00+05:30
+updated: 2026-11-12T04:42:00+05:30
 kind: essay
 align: justify
 summary: The moon has been a romantic's embodiment of a మన్మథీ's love for time immemorial
@@ -35,4 +35,4 @@ After a few moments of rumination, *the moon* to me was the absolute quintessenc
 
 - The moon being ever so far away, out of reach is the perfect metaphor for love. It reminds me of the story where a lover looks up at the moon and then down at a reflection of the moon in the lake infront of him and tries picking up the moon, for it to just slip away back into the lake.. he tried with a bucket, but the moon seemed to be stubborn and stuck to being in the lake.. this made the guy cry in silence, but one thing that got him to stay happy was knowing with certainty that the moon will come the next day too. The only sad days were the 'no moon' days.. it gave him the stark remainder that it might be all gone one day, and to cherish the next few days even more.. just a few disagreements, fights, some distance, but they'll always be back.. 
 
-- Moon as a messenger of love:
+- Moon as a messenger of love: The moon also acts as a postman, a lover can look up, talk the lover he sees in the moon and
