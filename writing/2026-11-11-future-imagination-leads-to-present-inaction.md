@@ -1,7 +1,7 @@
 ---
-title: future imagination leads to present inaction
+title: future, nostalgia, inaction
 date: 2026-11-11T12:01:00+05:30
-updated: 2026-11-11T12:03:00+05:30
+updated: 2026-11-11T12:10:00+05:30
 kind: quote
 align: center
 summary: 
