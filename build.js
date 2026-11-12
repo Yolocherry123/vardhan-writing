@@ -40,13 +40,15 @@ function safeUrl(url) {
 function imageOptions(suffix) {
   let size = "";
   let place = "";
-  const marks = String(suffix || "").match(/\{(small|medium|large|left|right|center)\}/gi) || [];
+  let frame = "";
+  const marks = String(suffix || "").match(/\{(small|medium|large|left|right|center|portrait)\}/gi) || [];
   for (const mark of marks) {
     const token = mark.slice(1, -1).toLowerCase();
     if (token === "small" || token === "medium" || token === "large") size = token;
     if (token === "left" || token === "right") place = token;
+    if (token === "portrait") frame = "portrait";
   }
-  return { size, place };
+  return { size, place, frame };
 }
 
 function mediaUrl(url, depth) {
@@ -119,7 +121,7 @@ function videoPlayer(url, caption, depth) {
 }
 
 function videoLine(line) {
-  return /^!video\[([^\]]*)\]\(([^)\s]+)\)((?:\{(?:small|medium|large|left|right|center)\}){0,2})$/i.exec(String(line || "").trim());
+  return /^!video\[([^\]]*)\]\(([^)\s]+)\)((?:\{(?:small|medium|large|left|right|center|portrait)\}){0,3})$/i.exec(String(line || "").trim());
 }
 
 function renderVideo(line, depth) {
@@ -132,8 +134,10 @@ function renderVideo(line, depth) {
   const classes = ["video"];
   if (options.size) classes.push(`size-${options.size}`);
   if (options.place) classes.push(`place-${options.place}`);
+  if (options.frame === "portrait") classes.push("frame-portrait");
   const figcaption = caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : "";
-  return `<figure class="${classes.join(" ")}">${player}${figcaption}</figure>`;
+  const fitted = options.frame === "portrait" ? `<div class="screen">${player}</div>` : player;
+  return `<figure class="${classes.join(" ")}">${fitted}${figcaption}</figure>`;
 }
 
 function isBlockStart(line) {
@@ -436,7 +440,7 @@ function pieceUpdated(value, filename) {
 
 function plainText(body) {
   return body
-    .replace(/!video\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
+    .replace(/!video\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center|portrait)\}){0,3}/gi, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
     .replace(/\{(?:left|center|right|justify|ragged)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
@@ -446,7 +450,7 @@ function plainText(body) {
 
 function firstSentence(body) {
   const plain = body
-    .replace(/!video\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
+    .replace(/!video\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center|portrait)\}){0,3}/gi, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
     .replace(/\{(?:left|center|right|justify|ragged)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
@@ -498,7 +502,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <link rel="manifest" href="${prefix}manifest.webmanifest">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${prefix}icon-192.png">
-<link rel="stylesheet" href="${prefix}site.css?v=55">
+<link rel="stylesheet" href="${prefix}site.css?v=56">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -1402,7 +1406,10 @@ function selfCheck() {
   assert.match(renderMarkdown("!video[](https://www.youtube.com/watch?v=abcdefghijk){medium}{left}"), /class="video size-medium place-left"/);
   assert.match(renderMarkdown("!video[Clip](/images/clip.mp4){small}", 1), /class="video size-small"/);
   assert.doesNotMatch(renderMarkdown("!video[](https://www.youtube.com/watch?v=abcdefghijk)"), /size-/);
-  assert.equal(firstSentence("Seen.\n\n!video[](https://youtu.be/abcdefghijk){large}"), "Seen.");
+  assert.match(renderMarkdown("!video[](https://www.youtube.com/watch?v=abcdefghijk){portrait}"), /class="video frame-portrait"/);
+  assert.match(renderMarkdown("!video[](https://www.youtube.com/watch?v=abcdefghijk){portrait}"), /<div class="screen"><iframe/);
+  assert.match(renderMarkdown("!video[Clip](/images/clip.mp4){medium}{portrait}", 1), /class="video size-medium frame-portrait"/);
+  assert.equal(firstSentence("Seen.\n\n!video[](https://youtu.be/abcdefghijk){portrait}"), "Seen.");
 }
 
 function main() {
@@ -1464,7 +1471,7 @@ function main() {
   assert.match(editor, /method: "DELETE"/);
   assert.match(editor, /id="delete"/);
   assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /src="edit\.js\?v=/);
-  assert.match(editor, /function videoAtCursor/);
+  assert.match(editor, /id="video-frame"/);
   assert.match(editor, /id="video"/);
   assert.match(editor, /id="youtube"/);
   assert.match(editor, /id="picture-size"/);
