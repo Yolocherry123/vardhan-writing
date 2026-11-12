@@ -118,14 +118,22 @@ function videoPlayer(url, caption, depth) {
   return `<video controls playsinline preload="metadata" src="${src}"></video>`;
 }
 
+function videoLine(line) {
+  return /^!video\[([^\]]*)\]\(([^)\s]+)\)((?:\{(?:small|medium|large|left|right|center)\}){0,2})$/i.exec(String(line || "").trim());
+}
+
 function renderVideo(line, depth) {
-  const match = /^!video\[([^\]]*)\]\(([^)\s]+)\)$/.exec(line.trim());
+  const match = videoLine(line);
   if (!match) return "";
   const caption = match[1].trim();
   const player = videoPlayer(match[2], caption, depth);
   if (!player) return "";
+  const options = imageOptions(match[3]);
+  const classes = ["video"];
+  if (options.size) classes.push(`size-${options.size}`);
+  if (options.place) classes.push(`place-${options.place}`);
   const figcaption = caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : "";
-  return `<figure class="video">${player}${figcaption}</figure>`;
+  return `<figure class="${classes.join(" ")}">${player}${figcaption}</figure>`;
 }
 
 function isBlockStart(line) {
@@ -137,7 +145,7 @@ function isBlockStart(line) {
     /^\s*\d+\.\s+/.test(line) ||
     /^(-{3,}|\*{3,})$/.test(line.trim()) ||
     /^\{(left|center|right|justify|ragged)\}$/.test(line.trim()) ||
-    /^!video\[[^\]]*\]\([^)\s]+\)$/.test(line.trim())
+    Boolean(videoLine(line))
   );
 }
 
@@ -188,7 +196,7 @@ function renderMarkdown(markdown, depth = 0) {
       i += 1;
       continue;
     }
-    if (/^!video\[[^\]]*\]\([^)\s]+\)$/.test(line.trim())) {
+    if (videoLine(line)) {
       const video = renderVideo(line, depth);
       if (video) emit(video);
       i += 1;
@@ -428,7 +436,7 @@ function pieceUpdated(value, filename) {
 
 function plainText(body) {
   return body
-    .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/!video\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
     .replace(/\{(?:left|center|right|justify|ragged)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
@@ -438,7 +446,7 @@ function plainText(body) {
 
 function firstSentence(body) {
   const plain = body
-    .replace(/!video\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/!video\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
     .replace(/!\[[^\]]*\]\([^)]*\)(?:\{(?:small|medium|large|left|right|center)\}){0,2}/gi, " ")
     .replace(/\{(?:left|center|right|justify|ragged)\}/g, " ")
     .replace(/[#>*_`[\]]/g, "")
@@ -490,7 +498,7 @@ function page({ config, depth, pathname, title, description, bodyClass, main, af
 <link rel="manifest" href="${prefix}manifest.webmanifest">
 <link rel="icon" href="${prefix}favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${prefix}icon-192.png">
-<link rel="stylesheet" href="${prefix}site.css?v=54">
+<link rel="stylesheet" href="${prefix}site.css?v=55">
 ${canonical}
 </head>
 <body class="${bodyClass} font-${TYPEFACES.includes(TYPEFACE) ? TYPEFACE : "courier"}">
@@ -696,7 +704,7 @@ function renderKind(config, posts, kind) {
     ? `<section class="archive kind-${kind}" aria-label="${KIND_HEADING[kind]}">
 <h1>${KIND_HEADING[kind]}</h1>
 <ol>
-${matching.map((post) => pieceItem(post, 0, false, kind === "quote" || kind === "essay")).join("\n")}
+${matching.map((post) => pieceItem(post, 0, false, true)).join("\n")}
 </ol>
 </section>`
     : `<p class="empty">${KIND_EMPTY[kind]}</p>`;
@@ -1280,6 +1288,24 @@ function selfCheck() {
   }]);
   assert.match(longNoteHome, /class="fold-lead home-note prose align-center"><div class="fold-lines"><p>Opening line of the thought\.<\/p><\/div><\/div>\s*<details class="fold">/);
   assert.match(longNoteHome, /<div class="home-note prose align-center"><p>The rest stays on the page\.<\/p><\/div>/);
+  const thoughtsPage = renderKind(sampleConfig, [{
+    title: "A long thought",
+    date: "2026-11-08",
+    when: "2026-11-08",
+    instant: null,
+    kind: "note",
+    summary: "",
+    attribution: "",
+    source: "",
+    align: "center",
+    slug: "long-thought",
+    html: "<p>Opening line of the thought.</p><p>The rest stays on the page.</p>",
+    homeHtml: "<p>Opening line of the thought.</p><p>The rest stays on the page.</p>",
+  }], "note");
+  assert.match(thoughtsPage, /<h1>Thoughts<\/h1>/);
+  assert.match(thoughtsPage, /class="fold-lead home-note prose align-center"/);
+  assert.match(thoughtsPage, /Opening line of the thought/);
+  assert.match(thoughtsPage, /<details class="fold">/);
   const pictured = renderHome(sampleConfig, [{
     title: "With a picture",
     date: "2026-11-08",
@@ -1373,7 +1399,10 @@ function selfCheck() {
   assert.match(renderMarkdown("!video[](https://cdn.example.com/a.webm)"), /src="https:\/\/cdn\.example\.com\/a\.webm"/);
   assert.doesNotMatch(renderMarkdown("!video[](javascript:alert(1))"), /src=/);
   assert.doesNotMatch(renderMarkdown("!video[](https://evil.example/watch?v=abcdefghijk)"), /iframe/);
-  assert.equal(firstSentence("Seen.\n\n!video[](https://youtu.be/abcdefghijk)"), "Seen.");
+  assert.match(renderMarkdown("!video[](https://www.youtube.com/watch?v=abcdefghijk){medium}{left}"), /class="video size-medium place-left"/);
+  assert.match(renderMarkdown("!video[Clip](/images/clip.mp4){small}", 1), /class="video size-small"/);
+  assert.doesNotMatch(renderMarkdown("!video[](https://www.youtube.com/watch?v=abcdefghijk)"), /size-/);
+  assert.equal(firstSentence("Seen.\n\n!video[](https://youtu.be/abcdefghijk){large}"), "Seen.");
 }
 
 function main() {
@@ -1411,6 +1440,9 @@ function main() {
     const kindPage = fs.readFileSync(path.join(docsDir, KIND_FILE[kind]), "utf8");
     assert.match(kindPage, new RegExp(`<h1>${KIND_HEADING[kind]}</h1>|${KIND_EMPTY[kind]}`));
   }
+  const thoughts = fs.readFileSync(path.join(docsDir, "notes.html"), "utf8");
+  assert.match(thoughts, /<h1>Thoughts<\/h1>/);
+  assert.match(thoughts, /class="fold"/);
   const essays = fs.readFileSync(path.join(docsDir, "essays.html"), "utf8");
   assert.match(essays, /<h1>Essays<\/h1>/);
   assert.match(essays, /class="archive kind-essay"/);
@@ -1432,6 +1464,7 @@ function main() {
   assert.match(editor, /method: "DELETE"/);
   assert.match(editor, /id="delete"/);
   assert.match(fs.readFileSync(path.join(docsDir, "edit.html"), "utf8"), /src="edit\.js\?v=/);
+  assert.match(editor, /function videoAtCursor/);
   assert.match(editor, /id="video"/);
   assert.match(editor, /id="youtube"/);
   assert.match(editor, /id="picture-size"/);

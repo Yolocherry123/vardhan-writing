@@ -497,13 +497,13 @@ ${writingTools()}
 <button type="button" data-tool="code-block">Code block</button>
 <button type="button" data-tool="rule">Divider</button>
 <button type="button" id="picture">Picture</button>
-<label class="picture-size">Size<select id="picture-size" aria-label="Picture size">
+<label class="picture-size">Size<select id="picture-size" aria-label="Size">
 <option value="">Default</option>
 <option value="small">Small</option>
 <option value="medium">Medium</option>
 <option value="large">Large</option>
 </select></label>
-<label class="picture-place">Place<select id="picture-place" aria-label="Picture place">
+<label class="picture-place">Place<select id="picture-place" aria-label="Place">
 <option value="">Center</option>
 <option value="left">Left</option>
 <option value="right">Right</option>
@@ -615,26 +615,57 @@ ${writingTools()}
   function syncPictureOptions() {
     const sizeSelect = document.getElementById("picture-size");
     const placeSelect = document.getElementById("picture-place");
-    const image = imageAtCursor();
-    if (!sizeSelect || !placeSelect || !image) return;
+    const media = imageAtCursor() || videoAtCursor();
+    if (!sizeSelect || !placeSelect || !media) return;
     sizingPicture = true;
-    sizeSelect.value = image.size;
-    placeSelect.value = image.place;
+    sizeSelect.value = media.size;
+    placeSelect.value = media.place;
     sizingPicture = false;
+  }
+
+  function mediaMarks() {
+    const size = pictureSize();
+    const place = picturePlace();
+    return `${size ? `{${size}}` : ""}${place ? `{${place}}` : ""}`;
+  }
+
+  function placedPhrase(place) {
+    if (place === "left") return "on the left";
+    if (place === "right") return "on the right";
+    return "in the center";
   }
 
   function applyPictureOptions() {
     if (sizingPicture) return;
     const image = imageAtCursor();
-    if (!image) return;
+    const video = image ? null : videoAtCursor();
+    const media = image || video;
+    if (!media) return;
     const size = pictureSize();
     const place = picturePlace();
-    const next = `![${image.alt}](${image.url})${size ? `{${size}}` : ""}${place ? `{${place}}` : ""}`;
-    if (next === image.el.value.slice(image.start, image.end)) return;
-    image.el.setRangeText(next, image.start, image.end, "end");
-    image.el.focus();
-    const where = place === "left" ? "on the left" : place === "right" ? "on the right" : "in the center";
-    status(`Picture set to ${size || "default"}, ${where}. ${publishHint()}`);
+    const next = image
+      ? `![${media.alt}](${media.url})${mediaMarks()}`
+      : `!video[${media.caption}](${media.url})${mediaMarks()}`;
+    if (next === media.el.value.slice(media.start, media.end)) return;
+    media.el.setRangeText(next, media.start, media.end, "end");
+    media.el.focus();
+    status(`${image ? "Picture" : "Video"} set to ${size || "default"}, ${placedPhrase(place)}. ${publishHint()}`);
+  }
+
+  function videoAtCursor() {
+    const el = bodyField();
+    if (!el) return null;
+    const cursor = el.selectionStart;
+    const pattern = /!video\[([^\]]*)\]\(([^)\s]+)\)((?:\{(?:small|medium|large|left|right|center)\}){0,2})/gi;
+    let match;
+    while ((match = pattern.exec(el.value))) {
+      const start = match.index;
+      const end = start + match[0].length;
+      if (cursor >= start && cursor <= end) {
+        return { el, start, end, caption: match[1], url: match[2], ...imageMarks(match[3]) };
+      }
+    }
+    return null;
   }
 
   function wrapSelection(before, after) {
@@ -829,8 +860,10 @@ ${writingTools()}
       status("Paste a YouTube link, such as https://www.youtube.com/watch?v=…");
       return;
     }
-    insertMedia(`!video[](https://www.youtube.com/watch?v=${id})`);
-    status(`YouTube video added. ${publishHint()}`);
+    insertMedia(`!video[](https://www.youtube.com/watch?v=${id})${mediaMarks()}`);
+    const size = pictureSize();
+    const place = picturePlace();
+    status(`YouTube video added${size || place ? `, ${size || "default"}, ${placedPhrase(place)}` : ""}. ${publishHint()}`);
   }
 
   async function uploadVideo(file) {
@@ -854,8 +887,10 @@ ${writingTools()}
       }
       const bytes = new Uint8Array(await file.arrayBuffer());
       await writeFile(`writing/images/${name}`, { base64: bytesToBase64(bytes) }, `Add video ${name}`, "");
-      insertMedia(`!video[](/images/${name})`);
-      status(`Video added. ${publishHint()}`);
+      insertMedia(`!video[](/images/${name})${mediaMarks()}`);
+      const size = pictureSize();
+      const place = picturePlace();
+      status(`Video added${size || place ? `, ${size || "default"}, ${placedPhrase(place)}` : ""}. ${publishHint()}`);
     } catch (error) {
       status(error.message);
     }
