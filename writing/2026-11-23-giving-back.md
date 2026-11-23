@@ -1,7 +1,7 @@
 ---
 title: Giving back
 date: 2026-11-23T21:25:00+05:30
-updated: 2026-11-23T23:16:00+05:30
+updated: 2026-11-23T23:22:00+05:30
 kind: quote
 align: center
 summary: 
