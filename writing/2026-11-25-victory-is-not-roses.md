@@ -1,7 +1,7 @@
 ---
-title: Victory is not roses
+title: Victory's disguise
 date: 2026-11-25T15:57:00+05:30
-updated: 2026-11-25T15:59:00+05:30
+updated: 2026-11-25T16:00:00+05:30
 kind: quote
 align: center
 summary: 
